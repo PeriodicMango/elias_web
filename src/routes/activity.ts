@@ -6,7 +6,7 @@ let getActivity: Function;
 let listAddresses: Function;
 
 async function load() {
-  const a = await import("../../elias/src/helpers/tools/executors/activity.js");
+  const a = await import("../../../elias/src/helpers/tools/executors/activity.js");
   getActivity = a.getActivity;
   listAddresses = a.listAddresses;
 }

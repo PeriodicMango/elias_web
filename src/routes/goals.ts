@@ -5,7 +5,7 @@ const router = Router();
 let manageGoals: Function;
 
 async function load() {
-  const g = await import("../../elias/src/helpers/tools/executors/goals.js");
+  const g = await import("../../../elias/src/helpers/tools/executors/goals.js");
   manageGoals = g.manageGoals;
 }
 

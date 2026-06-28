@@ -9,12 +9,12 @@ let getMasterTitle: Function;
 let renamePersona: Function;
 
 async function load() {
-  const p = await import("../../elias/src/helpers/personas.js");
+  const p = await import("../../../elias/src/helpers/personas.js");
   listPersonas = p.listPersonas;
   getPersonaTitle = p.getPersonaTitle;
   getPersonaTriggers = p.getPersonaTriggers;
   getMasterTitle = p.getMasterTitle;
-  const c = await import("../../elias/src/helpers/commands.js");
+  const c = await import("../../../elias/src/helpers/commands.js");
   renamePersona = (c as any).renamePersona;
 }
 

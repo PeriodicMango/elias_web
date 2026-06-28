@@ -6,7 +6,7 @@ let getMasterId: Function;
 let transferMaster: Function;
 
 async function load() {
-  const a = await import("../../elias/src/helpers/auth.js");
+  const a = await import("../../../elias/src/helpers/auth.js");
   getMasterId = a.getMasterId;
   transferMaster = a.transferMaster;
 }

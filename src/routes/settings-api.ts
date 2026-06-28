@@ -8,11 +8,11 @@ let getApiKey: Function;
 let readDataJson: Function;
 
 async function load() {
-  const c = await import("../../elias/src/config.js");
+  const c = await import("../../../elias/src/config.js");
   getModel = c.getModel;
   getApiUrl = c.getApiUrl;
   getApiKey = c.getApiKey;
-  const a = await import("../../elias/src/helpers/auth.js");
+  const a = await import("../../../elias/src/helpers/auth.js");
   readDataJson = a.readDataJson;
 }
 
@@ -35,7 +35,7 @@ router.put("/", async (req, res) => {
   if (key !== undefined) data.deepseekKey = key;
   const fs = await import("node:fs/promises");
   const path = await import("node:path");
-  const { PATHS } = await import("../../elias/src/config.js");
+  const { PATHS } = await import("../../../elias/src/config.js");
   await fs.writeFile(
     path.join(PATHS.base, "data.json"),
     JSON.stringify(data, null, 2),

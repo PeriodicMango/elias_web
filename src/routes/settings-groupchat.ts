@@ -7,10 +7,10 @@ let saveChannels: Function;
 let listPersonas: Function;
 
 async function load() {
-  const cr = await import("../../elias/src/helpers/channelRegistry.js");
+  const cr = await import("../../../elias/src/helpers/channelRegistry.js");
   loadChannels = cr.loadChannels;
   saveChannels = cr.saveChannels;
-  const p = await import("../../elias/src/helpers/personas.js");
+  const p = await import("../../../elias/src/helpers/personas.js");
   listPersonas = p.listPersonas;
 }
 
@@ -21,7 +21,7 @@ router.get("/", async (_req, res) => {
     const gcPersonas: string[] = channels?.groupChat?.personas ?? [];
     const personas = await Promise.all(
       (names as string[]).map(async (name: string) => {
-        const { getPersonaTitle } = await import("../../elias/src/helpers/personas.js");
+        const { getPersonaTitle } = await import("../../../elias/src/helpers/personas.js");
         return {
           name,
           displayName: await getPersonaTitle(name),

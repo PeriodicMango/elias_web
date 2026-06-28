@@ -8,11 +8,11 @@ let setPersonaProactiveDisabled: Function;
 let listPersonas: Function;
 
 async function load() {
-  const p = await import("../../elias/src/helpers/proactive.js");
+  const p = await import("../../../elias/src/helpers/proactive.js");
   isPaused = p.isPaused;
   getProactiveDisabledPersonas = p.getProactiveDisabledPersonas;
   setPersonaProactiveDisabled = p.setPersonaProactiveDisabled;
-  const per = await import("../../elias/src/helpers/personas.js");
+  const per = await import("../../../elias/src/helpers/personas.js");
   listPersonas = per.listPersonas;
 }
 
@@ -26,14 +26,14 @@ router.get("/", async (_req, res) => {
     // Read pause until
     let pausedUntil: string | null = null;
     try {
-      const { readDataJson } = await import("../../elias/src/helpers/auth.js");
+      const { readDataJson } = await import("../../../elias/src/helpers/auth.js");
       const data = await readDataJson();
       pausedUntil = (data.proactivePausedUntil as string) ?? null;
     } catch {}
 
     const personas = await Promise.all(
       (names as string[]).map(async (name: string) => {
-        const titleMod = await import("../../elias/src/helpers/personas.js");
+        const titleMod = await import("../../../elias/src/helpers/personas.js");
         return {
           name,
           displayName: await titleMod.getPersonaTitle(name),
@@ -61,12 +61,12 @@ router.post("/pause", async (req, res) => {
     const ms = unit.startsWith("h") || unit === "小时" ? n * 3600000 : n * 60000;
     const until = new Date(Date.now() + ms).toISOString();
 
-    const { readDataJson } = await import("../../elias/src/helpers/auth.js");
+    const { readDataJson } = await import("../../../elias/src/helpers/auth.js");
     const data = await readDataJson();
     data.proactivePausedUntil = until;
     const fs = await import("node:fs/promises");
     const path = await import("node:path");
-    const { PATHS } = await import("../../elias/src/config.js");
+    const { PATHS } = await import("../../../elias/src/config.js");
     await fs.writeFile(path.join(PATHS.base, "data.json"), JSON.stringify(data, null, 2), "utf8");
     res.json({ ok: true, pausedUntil: until });
   } catch (err: any) {
@@ -76,12 +76,12 @@ router.post("/pause", async (req, res) => {
 
 router.post("/resume", async (_req, res) => {
   try {
-    const { readDataJson } = await import("../../elias/src/helpers/auth.js");
+    const { readDataJson } = await import("../../../elias/src/helpers/auth.js");
     const data = await readDataJson();
     delete data.proactivePausedUntil;
     const fs = await import("node:fs/promises");
     const path = await import("node:path");
-    const { PATHS } = await import("../../elias/src/config.js");
+    const { PATHS } = await import("../../../elias/src/config.js");
     await fs.writeFile(path.join(PATHS.base, "data.json"), JSON.stringify(data, null, 2), "utf8");
     res.json({ ok: true });
   } catch (err: any) {
