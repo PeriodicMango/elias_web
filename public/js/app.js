@@ -179,7 +179,12 @@ async function renderChat() {
         message: text,
         fastMode
       });
-      loadingEl.querySelector(".msg-content").innerHTML = escapeHtml(data.reply);
+      let msgHTML = escapeHtml(data.reply);
+      if (data.thinking && data.thinking.trim()) {
+        const thinkingId = "thinking-" + Date.now();
+        msgHTML += '<div class="thinking-toggle" onclick="var t=document.getElementById(\'' + thinkingId + '\');t.classList.toggle(\'hidden\');this.classList.toggle(\'open\');"><span class="thinking-arrow">\u25B6</span> Thinking</div><pre class="thinking-content hidden" id="' + thinkingId + '">' + escapeHtml(data.thinking.trim()) + "</pre>";
+      }
+      loadingEl.querySelector(".msg-content").innerHTML = msgHTML;
       if (data.mood && data.mood !== "\u5E73\u9759") {
         const meta = loadingEl.querySelector(".msg-meta");
         meta.innerHTML += ` <span class="msg-mood">${escapeHtml(data.mood)}</span>`;

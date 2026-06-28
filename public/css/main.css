@@ -555,6 +555,40 @@ a:hover { text-decoration: underline; }
 .badge-warning { background: #fef3c7; color: #92400e; }
 .badge-danger { background: #fee2e2; color: #991b1b; }
 .text-mono { font-family: var(--font-mono); font-size: var(--fs-sm); }
+/* --- Thinking Toggle --- */
+.thinking-toggle {
+  margin-top: var(--space-sm);
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+}
+.thinking-toggle:hover { color: var(--accent); }
+.thinking-toggle.open .thinking-arrow { transform: rotate(90deg); }
+.thinking-arrow {
+  display: inline-block;
+  transition: transform 0.15s;
+  font-size: 10px;
+}
+.thinking-content {
+  margin-top: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  white-space: pre-wrap;
+  max-height: 300px;
+  overflow-y: auto;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
 pre.log-output {
   background: var(--bg-input);
   border: 1px solid var(--border);
