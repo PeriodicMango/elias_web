@@ -90,8 +90,9 @@ router.get("/callback", async (req, res) => {
       avatar: user.avatar ?? "",
     };
 
+    console.log(`[AUTH] User set: ${user.username}, saving session...`);
     req.session.save((err) => {
-      if (err) console.error(`[AUTH] Session save error:`, err);
+      console.log(`[AUTH] Save done — err: ${err ? err.message : "none"}, hasUser: ${!!req.session.user}`);
       res.redirect("/");
     });
   } catch (err) {
@@ -109,6 +110,7 @@ router.get("/logout", (req, res) => {
 
 // --- GET /api/auth/me ---
 router.get("/me", (req, res) => {
+  console.log(`[AUTH] /me called — hasSession: ${!!req.session}, hasUser: ${!!req.session.user}`);
   if (!req.session.user) {
     return res.status(401).json({ error: "Not logged in." });
   }
