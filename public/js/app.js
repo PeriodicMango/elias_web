@@ -316,15 +316,21 @@ function buildTreeNode(node, depth, source) {
   return div;
 }
 async function openFile(path, source) {
-  const data = await getJSON(`/api/vault/read?path=${encodeURIComponent(path)}&source=${source}`);
-  const textarea = document.getElementById("kb-textarea");
-  textarea.value = data.content;
-  document.getElementById("kb-path").textContent = `${source === "vault" ? "Vault" : "Elias Data"} \u203A ${path}`;
-  document.getElementById("kb-source").textContent = source === "vault" ? "\u53EA\u8BFB (Obsidian Vault)" : "\u53EF\u7F16\u8F91 (Elias Data)";
-  document.getElementById("kb-save").disabled = source === "vault";
-  document.getElementById("kb-delete").disabled = source === "vault";
-  textarea.readOnly = source === "vault";
-  kbCurrentFile = { path, source };
+  try {
+    const data = await getJSON(`/api/vault/read?path=${encodeURIComponent(path)}&source=${source}`);
+    const textarea = document.getElementById("kb-textarea");
+    if (!textarea) { console.error("kb-textarea not found"); return; }
+    textarea.value = data.content || "";
+    document.getElementById("kb-path").textContent = `${source === "vault" ? "Vault" : "Elias Data"} \u203A ${path}`;
+    document.getElementById("kb-source").textContent = source === "vault" ? "\u53EA\u8BFB (Obsidian Vault)" : "\u53EF\u7F16\u8F91 (Elias Data)";
+    document.getElementById("kb-save").disabled = source === "vault";
+    document.getElementById("kb-delete").disabled = source === "vault";
+    textarea.readOnly = source === "vault";
+    kbCurrentFile = { path, source };
+  } catch (e) {
+    alert("\u8BFB\u53D6\u6587\u4EF6\u5931\u8D25: " + (e.message || e));
+    console.error("openFile error:", e);
+  }
 }
 let kbCurrentFile = null;
 async function renderGoals() {
