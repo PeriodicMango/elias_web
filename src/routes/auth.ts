@@ -29,9 +29,10 @@ router.get("/login", (_req, res) => {
 
 // --- GET /auth/callback --- Discord OAuth callback ---
 router.get("/callback", async (req, res) => {
+  console.log(`[AUTH] Callback hit, query:`, JSON.stringify(req.query));
   const code = req.query.code as string | undefined;
   if (!code) {
-    return res.status(400).send("Missing authorization code.");
+    return res.status(400).send(`Missing authorization code. Query: ${JSON.stringify(req.query)}`);
   }
 
   try {
