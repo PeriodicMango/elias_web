@@ -242,13 +242,13 @@ async function renderKB() {
       </div>
     </div>
   `;
-  let currentFile2 = null;
+  kbCurrentFile = null;
   const data = await getJSON("/api/vault/tree");
   renderTree(data.roots, document.getElementById("kb-tree"));
   document.getElementById("kb-save").addEventListener("click", async () => {
-    if (!currentFile2 || currentFile2.source === "vault") return;
+    if (!kbCurrentFile || kbCurrentFile.source === "vault") return;
     const content = document.getElementById("kb-textarea").value;
-    await postJSON("/api/vault/write", { filePath: currentFile2.path, content });
+    await postJSON("/api/vault/write", { filePath: kbCurrentFile.path, content });
     alert("\u5DF2\u4FDD\u5B58\u3002");
   });
   document.getElementById("kb-new").addEventListener("click", async () => {
@@ -260,14 +260,14 @@ async function renderKB() {
     renderTree(d.roots, document.getElementById("kb-tree"));
   });
   document.getElementById("kb-delete").addEventListener("click", async () => {
-    if (!currentFile2 || currentFile2.source === "vault") return;
-    if (!confirm(`\u786E\u8BA4\u5220\u9664 ${currentFile2.path}?`)) return;
+    if (!kbCurrentFile || kbCurrentFile.source === "vault") return;
+    if (!confirm(`\u786E\u8BA4\u5220\u9664 ${kbCurrentFile.path}?`)) return;
     await fetch("/api/vault/delete", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ filePath: currentFile2.path })
+      body: JSON.stringify({ filePath: kbCurrentFile.path })
     });
-    currentFile2 = null;
+    kbCurrentFile = null;
     document.getElementById("kb-textarea").value = "";
     document.getElementById("kb-path").textContent = "";
     document.getElementById("kb-save").disabled = true;
@@ -324,9 +324,9 @@ async function openFile(path, source) {
   document.getElementById("kb-save").disabled = source === "vault";
   document.getElementById("kb-delete").disabled = source === "vault";
   textarea.readOnly = source === "vault";
-  currentFile = { path, source };
+  kbCurrentFile = { path, source };
 }
-let currentFile = null;
+let kbCurrentFile = null;
 async function renderGoals() {
   const main = document.getElementById("main-content");
   const data = await getJSON("/api/goals");
