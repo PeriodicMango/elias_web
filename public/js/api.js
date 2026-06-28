@@ -2,9 +2,17 @@
 
 const BASE = "";
 
+function handleAuthError() {
+  // Show login page — don't auto-redirect (avoids redirect loop)
+  const app = document.getElementById("app-view");
+  const login = document.getElementById("login-view");
+  if (app) app.classList.add("hidden");
+  if (login) login.classList.remove("hidden");
+}
+
 export async function getJSON(path: string): Promise<any> {
   const res = await fetch(BASE + path);
-  if (res.status === 401) { window.location.href = "/auth/login"; throw new Error("Unauthorized"); }
+  if (res.status === 401) { handleAuthError(); throw new Error("Unauthorized"); }
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error || `HTTP ${res.status}`);
@@ -18,7 +26,7 @@ export async function postJSON(path: string, body?: any): Promise<any> {
     headers: { "Content-Type": "application/json" },
     body: body ? JSON.stringify(body) : undefined,
   });
-  if (res.status === 401) { window.location.href = "/auth/login"; throw new Error("Unauthorized"); }
+  if (res.status === 401) { handleAuthError(); throw new Error("Unauthorized"); }
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.error || `HTTP ${res.status}`);
@@ -32,7 +40,7 @@ export async function putJSON(path: string, body?: any): Promise<any> {
     headers: { "Content-Type": "application/json" },
     body: body ? JSON.stringify(body) : undefined,
   });
-  if (res.status === 401) { window.location.href = "/auth/login"; throw new Error("Unauthorized"); }
+  if (res.status === 401) { handleAuthError(); throw new Error("Unauthorized"); }
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.error || `HTTP ${res.status}`);
@@ -46,7 +54,7 @@ export async function deleteJSON(path: string, body?: any): Promise<any> {
     headers: { "Content-Type": "application/json" },
     body: body ? JSON.stringify(body) : undefined,
   });
-  if (res.status === 401) { window.location.href = "/auth/login"; throw new Error("Unauthorized"); }
+  if (res.status === 401) { handleAuthError(); throw new Error("Unauthorized"); }
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.error || `HTTP ${res.status}`);

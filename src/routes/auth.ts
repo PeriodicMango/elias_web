@@ -83,14 +83,17 @@ router.get("/callback", async (req, res) => {
       return res.status(403).send("你不是我的 Master。");
     }
 
-    // Set session
+    // Set session and save before redirect
     req.session.user = {
       id: user.id,
       username: user.username,
       avatar: user.avatar ?? "",
     };
 
-    res.redirect("/");
+    req.session.save((err) => {
+      if (err) console.error(`[AUTH] Session save error:`, err);
+      res.redirect("/");
+    });
   } catch (err) {
     console.error(`[AUTH] Callback error:`, err);
     res.status(500).send("Authentication error.");
