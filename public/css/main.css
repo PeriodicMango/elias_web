@@ -7,15 +7,15 @@
 :root {
   --bg-body: #f4f6fb;
   --bg-card: #ffffff;
-  --bg-sidebar: #1a1d3b;
-  --bg-sidebar-hover: #252954;
-  --bg-sidebar-active: #2d3273;
+  --bg-sidebar: #0f2744;
+  --bg-sidebar-hover: #163658;
+  --bg-sidebar-active: #1a4478;
   --bg-input: #f8fafc;
 
-  --accent: #5e6ad2;
-  --accent-light: #eef0ff;
-  --accent-hover: #4f5bc0;
-  --accent-secondary: #3b82f6;
+  --accent: #3b82f6;
+  --accent-light: #dbeafe;
+  --accent-hover: #2563eb;
+  --accent-secondary: #60a5fa;
 
   --text-primary: #1e293b;
   --text-secondary: #64748b;
@@ -61,18 +61,18 @@
   --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.4);
 }
 
-/* --- Blue Theme (Hyperspace-inspired) --- */
+/* --- Blue Theme --- */
 [data-theme="blue"] {
-  --bg-body: #e8edf5;
+  --bg-body: #eff6ff;
   --bg-card: #ffffff;
-  --bg-sidebar: #1e1b4b;
-  --bg-sidebar-hover: #2e2a6e;
-  --bg-sidebar-active: #3730a3;
-  --accent: #6366f1;
-  --accent-light: #e0e7ff;
-  --accent-hover: #4f46e5;
-  --accent-secondary: #818cf8;
-  --text-primary: #1e1b4b;
+  --bg-sidebar: #0c2d5c;
+  --bg-sidebar-hover: #133d72;
+  --bg-sidebar-active: #1a5aa5;
+  --accent: #2563eb;
+  --accent-light: #dbeafe;
+  --accent-hover: #1d4ed8;
+  --accent-secondary: #3b82f6;
+  --text-primary: #1e3a5f;
   --text-secondary: #6b7280;
 }
 

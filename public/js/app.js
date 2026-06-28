@@ -684,10 +684,10 @@ async function renderSettings() {
 function renderStyle() {
   const main = document.getElementById("main-content");
   const currentTheme = localStorage.getItem("elias-theme") || "light";
-  const currentAccent = localStorage.getItem("elias-accent") || "#5e6ad2";
+  const currentAccent = localStorage.getItem("elias-accent") || "#3b82f6";
   const currentFontSize = localStorage.getItem("elias-font-size") || "medium";
   const currentCardStyle = localStorage.getItem("elias-card-style") || "flat";
-  const accents = ["#5e6ad2", "#6366f1", "#3b82f6", "#0891b2", "#7c3aed", "#db2777"];
+  const accents = ["#3b82f6", "#2563eb", "#0891b2", "#0ea5e9", "#6366f1", "#8b5cf6"];
   main.innerHTML = `
     <div class="card">
       <div class="card-header">\u{1F3A8} Theme</div>
