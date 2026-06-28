@@ -48,8 +48,9 @@ router.get("/callback", async (req, res) => {
       }),
     });
     if (!tokenRes.ok) {
-      console.error(`[AUTH] Token exchange failed: ${tokenRes.status}`);
-      return res.status(500).send("Discord token exchange failed.");
+      const errText = await tokenRes.text();
+      console.error(`[AUTH] Token exchange failed: ${tokenRes.status} — ${errText}`);
+      return res.status(500).send(`Discord token exchange failed: ${errText}`);
     }
 
     const tokenData = (await tokenRes.json()) as {
