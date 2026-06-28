@@ -56,6 +56,13 @@ async function loadPersonas() {
   try {
     const data = await getJSON("/api/personas");
     state.personas = data.personas;
+    // Load avatar URLs for each persona
+    for (const p of state.personas) {
+      try {
+        const full = await getJSON(`/api/personas/${p.name}`);
+        p.avatarUrl = full.avatarUrl || "";
+      } catch { p.avatarUrl = ""; }
+    }
     if (state.personas.length > 0 && !state.personas.find((p) => p.name === state.activePersona)) {
       state.activePersona = state.personas[0].name;
     }
@@ -220,11 +227,14 @@ function addMsg(role, content, loading = false) {
   if (empty) empty.remove();
   const el = document.createElement("div");
   el.className = `msg ${role}${loading ? " loading" : ""}`;
-  const avatarLetter = role === "user" ? state.user?.username?.[0] || "U" : state.personas.find((p) => p.name === state.activePersona)?.displayName?.[0] || "E";
+  const persona = state.personas.find((p) => p.name === state.activePersona);
+  const avatarLetter = role === "user" ? state.user?.username?.[0] || "U" : persona?.displayName?.[0] || "E";
+  const avatarUrl = role === "user" ? (state.user?.avatar ? `https://cdn.discordapp.com/avatars/${state.user.id}/${state.user.avatar}.png?size=64` : "") : (persona?.avatarUrl || "");
+  const avatarHTML = avatarUrl ? `<img src="${escapeHtml(avatarUrl)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none';this.parentElement.textContent='${escapeHtml(avatarLetter)}';" alt="">` : escapeHtml(avatarLetter);
   el.innerHTML = `
-    <div class="msg-avatar">${escapeHtml(avatarLetter)}</div>
+    <div class="msg-avatar">${avatarHTML}</div>
     <div class="msg-bubble">
-      <div class="msg-meta">${role === "user" ? "\u4F60" : state.personas.find((p) => p.name === state.activePersona)?.displayName || "Elias"}</div>
+      <div class="msg-meta">${role === "user" ? "\u4F60" : persona?.displayName || "Elias"}</div>
       <div class="msg-content">${content}</div>
     </div>
   `;
