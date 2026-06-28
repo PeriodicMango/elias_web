@@ -68,6 +68,7 @@ function renderSidebar() {
   nav.innerHTML = "";
   const tabs = [
     { id: "chat", icon: "\u{1F4AC}", label: "Chat" },
+    { id: "personas", icon: "\u{1F465}", label: "Personas" },
     { id: "kb", icon: "\u{1F9E0}", label: "Knowledge Base" },
     { id: "goals", icon: "\u{1F4CB}", label: "Goals" },
     { id: "settings", icon: "\u2699\uFE0F", label: "Settings" },
@@ -103,6 +104,9 @@ async function switchTab(tabId) {
     switch (tabId) {
       case "chat":
         await renderChat();
+        break;
+      case "personas":
+        await renderPersonasTab();
         break;
       case "kb":
         await renderKB();
@@ -228,6 +232,96 @@ function addMsg(role, content, loading = false) {
   msgContainer.scrollTop = msgContainer.scrollHeight;
   return el;
 }
+// --- Personas Tab ---
+async function renderPersonasTab() {
+  const main = document.getElementById("main-content");
+  const data = await getJSON("/api/personas");
+  const personas = data.personas || [];
+
+  // Load full details for each persona
+  const details = await Promise.all(
+    personas.map((p) => getJSON(`/api/personas/${p.name}`).catch(() => null))
+  );
+
+  let html = "";
+  for (const d of details) {
+    if (!d) continue;
+    html += `
+      <div class="card">
+        <div class="card-header">
+          <div style="display:flex;align-items:center;gap:var(--space-md);">
+            ${d.avatarUrl ? `<img src="${escapeHtml(d.avatarUrl)}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'" alt="">` : '<div style="width:48px;height:48px;border-radius:50%;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-size:var(--fs-lg);">' + escapeHtml(d.displayName[0] || "?") + '</div>'}
+            <div>
+              <strong style="font-size:var(--fs-lg);">${escapeHtml(d.displayName)}</strong>
+              <div style="font-size:var(--fs-sm);color:var(--text-secondary);">${escapeHtml(d.name)} — 触发词: ${escapeHtml(d.triggers?.join(", ") || "无")}</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label class="form-label">头像 URL</label>
+            <input class="form-input" value="${escapeHtml(d.avatarUrl || "")}" placeholder="https://..." data-pname="${escapeHtml(d.name)}" data-field="avatarUrl">
+          </div>
+          <div class="form-group">
+            <label class="form-label">称呼我为</label>
+            <input class="form-input" value="${escapeHtml(d.masterTitle || "")}" placeholder="指挥官" data-pname="${escapeHtml(d.name)}" data-field="masterTitle">
+            <span style="font-size:var(--fs-sm);color:var(--text-secondary);">修改后需在下方文件内容中同步更新 YAML frontmatter 的 master_title</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">显示名称</label>
+            <input class="form-input" value="${escapeHtml(d.displayName || "")}" placeholder="Display Name" data-pname="${escapeHtml(d.name)}" data-field="displayName">
+            <span style="font-size:var(--fs-sm);color:var(--text-secondary);">修改后需在下方文件内容中同步更新 YAML frontmatter 的 display_name</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">人格文件 (personas/${escapeHtml(d.name)}.md)</label>
+            <textarea class="form-textarea" style="min-height:300px;" data-pname="${escapeHtml(d.name)}" data-field="fileContent">${escapeHtml(d.fileContent || "")}</textarea>
+          </div>
+          <button class="btn btn-primary" data-pname="${escapeHtml(d.name)}" data-action="save-persona">保存 ${escapeHtml(d.displayName)}</button>
+        </div>
+      </div>`;
+  }
+
+  main.innerHTML = html;
+
+  // Save button handlers
+  main.querySelectorAll("[data-action='save-persona']").forEach((btn) => {
+    btn.addEventListener("click", async function () {
+      const pname = this.dataset.pname;
+      const card = this.closest(".card");
+      const fileContent = card.querySelector("[data-field='fileContent']").value;
+      const avatarUrl = card.querySelector("[data-field='avatarUrl']").value;
+
+      // For masterTitle and displayName, update the YAML in fileContent
+      let updatedContent = fileContent;
+      const masterTitle = card.querySelector("[data-field='masterTitle']").value;
+      const displayName = card.querySelector("[data-field='displayName']").value;
+
+      // Update master_title in YAML frontmatter
+      updatedContent = updatedContent.replace(/master_title:\s*.*/g, `master_title: ${masterTitle}`);
+      if (!updatedContent.includes("master_title:")) {
+        updatedContent = updatedContent.replace(/---\n/, `---\nmaster_title: ${masterTitle}\n`);
+      }
+
+      // Update display_name in YAML frontmatter
+      updatedContent = updatedContent.replace(/display_name:\s*.*/g, `display_name: ${displayName}`);
+      if (!updatedContent.includes("display_name:")) {
+        updatedContent = updatedContent.replace(/---\n/, `---\ndisplay_name: ${displayName}\n`);
+      }
+
+      try {
+        await fetch(`/api/personas/${pname}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fileContent: updatedContent, avatarUrl }),
+        });
+        alert("已保存！刷新页面后生效。");
+      } catch (e) {
+        alert("保存失败: " + (e.message || e));
+      }
+    });
+  });
+}
+
 async function renderKB() {
   const main = document.getElementById("main-content");
   main.innerHTML = `
