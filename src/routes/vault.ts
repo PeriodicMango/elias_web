@@ -25,21 +25,20 @@ function safeResolve(root: string, filePath: string): string {
 router.get("/tree", async (_req, res) => {
   try {
     if (!VAULT_ROOT) await loadRoots();
-    async function tree(dir: string, name: string, maxDepth = 4): Promise<any> {
-      const node: any = { name, path: path.relative(dir, dir), type: "directory", children: [] };
+    async function tree(dir: string, name: string, maxDepth = 4, prefix = ""): Promise<any> {
+      const node: any = { name, path: prefix || name, type: "directory", children: [] };
       if (maxDepth <= 0) return node;
       let entries;
       try { entries = await fs.readdir(dir, { withFileTypes: true }); } catch { return node; }
       for (const e of entries) {
         if (e.name.startsWith(".")) continue;
         const full = path.join(dir, e.name);
-        const rel = full.slice(dir.length + 1);
+        const childPath = prefix ? `${prefix}/${e.name}` : e.name;
         if (e.isDirectory()) {
-          const child = await tree(full, e.name, maxDepth - 1);
-          child.path = rel;
+          const child = await tree(full, e.name, maxDepth - 1, childPath);
           node.children.push(child);
         } else {
-          node.children.push({ name: e.name, path: rel, type: "file" });
+          node.children.push({ name: e.name, path: childPath, type: "file" });
         }
       }
       node.children.sort((a: any, b: any) => {
