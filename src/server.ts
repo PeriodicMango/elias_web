@@ -40,9 +40,9 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false, // HTTP on droplet (no domain, no HTTPS)
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      sameSite: "lax",
+      secure: false,
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+      // sameSite omitted — some browsers restrict SameSite cookies on HTTP/IP sites
     },
   }),
 );
