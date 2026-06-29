@@ -343,7 +343,7 @@ a:hover { text-decoration: underline; }
   font-size: var(--fs-base);
   font-weight: 600;
   flex-shrink: 0;
-  padding: 4px;
+  margin: 0 var(--space-sm);
 }
 .msg.user .msg-avatar { background: var(--accent); color: #fff; }
 .msg-bubble {
