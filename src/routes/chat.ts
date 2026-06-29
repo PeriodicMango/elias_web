@@ -26,18 +26,18 @@ let timeString: Function;
 let todayString: Function;
 
 async function loadModules() {
-  const llm = await import("../../../elias/src/llm.js");
+  const llm = await import("../../../eliasCore/src/llm.js");
   chatDualPipeline = llm.chatDualPipeline;
   chat = llm.chat;
 
-  const prompt = await import("../../../elias/src/prompt.js");
+  const prompt = await import("../../../eliasCore/src/prompt.js");
   loadSoul = prompt.loadSoul;
   assemblePrompt = prompt.assemblePrompt;
   loadUserProfile = prompt.loadUserProfile;
   loadDynamicRules = prompt.loadDynamicRules;
   loadPersonaNotebook = prompt.loadPersonaNotebook;
 
-  const memory = await import("../../../elias/src/memory.js");
+  const memory = await import("../../../eliasCore/src/memory.js");
   getRecentMemory = memory.getRecentMemory;
   getSemanticKnowledge = memory.getSemanticKnowledge;
   getUserContext = memory.getUserContext;
@@ -45,20 +45,20 @@ async function loadModules() {
   timeString = memory.timeString;
   todayString = memory.todayString;
 
-  const historyMod = await import("../../../elias/src/helpers/history.js");
+  const historyMod = await import("../../../eliasCore/src/helpers/history.js");
   getHistory = historyMod.getHistory;
   pushHistoryMessage = historyMod.pushHistoryMessage;
   appendHistory = historyMod.appendHistory;
 
-  const config = await import("../../../elias/src/config.js");
+  const config = await import("../../../eliasCore/src/config.js");
   personaPath = config.personaPath;
 
-  const statusMod = await import("../../../elias/src/helpers/status.js");
+  const statusMod = await import("../../../eliasCore/src/helpers/status.js");
   getCurrentStatus = statusMod.getCurrentStatus;
   getStatusPrompt = statusMod.getStatusPrompt;
   onUserMessage = statusMod.onUserMessage;
 
-  const tools = await import("../../../elias/src/helpers/tools/index.js");
+  const tools = await import("../../../eliasCore/src/helpers/tools/index.js");
   getAllToolDefinitions = tools.getAllToolDefinitions;
 }
 
@@ -88,7 +88,7 @@ router.post("/", async (req, res) => {
     // 1. Load persona identity
     const [soul, title] = await Promise.all([
       loadSoul(p),
-      import("../../../elias/src/helpers/personas.js").then((m) =>
+      import("../../../eliasCore/src/helpers/personas.js").then((m) =>
         m.getPersonaTitle(p),
       ),
     ]);
@@ -218,7 +218,7 @@ router.post("/clear", async (_req, res) => {
     if (!personaPath) await loadModules();
     // We need to import clearHistory
     const { clearHistory } = await import(
-      "../../../elias/src/helpers/history.js"
+      "../../../eliasCore/src/helpers/history.js"
     );
     // Get current persona from request or default
     const persona = "elias"; // Default — web only has one user context

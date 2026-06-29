@@ -8,12 +8,12 @@ let getMasterId: Function;
 let listPersonas: Function;
 
 async function load() {
-  const c = await import("../../../elias/src/config.js");
+  const c = await import("../../../eliasCore/src/config.js");
   getModel = c.getModel;
   getApiUrl = c.getApiUrl;
-  const a = await import("../../../elias/src/helpers/auth.js");
+  const a = await import("../../../eliasCore/src/helpers/auth.js");
   getMasterId = a.getMasterId;
-  const p = await import("../../../elias/src/helpers/personas.js");
+  const p = await import("../../../eliasCore/src/helpers/personas.js");
   listPersonas = p.listPersonas;
 }
 
@@ -25,7 +25,7 @@ router.get("/", async (_req, res) => {
     ]);
 
     const fs = await import("node:fs/promises");
-    const { PATHS } = await import("../../../elias/src/config.js");
+    const { PATHS } = await import("../../../eliasCore/src/config.js");
 
     let kbOk = false, eliasDataOk = false;
     try { await fs.access(PATHS.knowledgeBase); kbOk = true; } catch {}

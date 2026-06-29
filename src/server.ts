@@ -4,8 +4,8 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Load elias .env FIRST so its config.ts finds API keys
-dotenv.config({ path: path.resolve(__dirname, "..", "..", "elias", ".env") });
+// Load eliasCore .env FIRST so its config.ts finds API keys
+dotenv.config({ path: path.resolve(__dirname, "..", "..", "..", "eliasCore", ".env") });
 // Then load web-specific .env (non-override)
 dotenv.config({ path: path.resolve(__dirname, "..", ".env") });
 

@@ -13,14 +13,14 @@ let loadChannels: Function;
 let saveChannels: Function;
 
 async function load() {
-  const p = await import("../../../elias/src/helpers/personas.js");
+  const p = await import("../../../eliasCore/src/helpers/personas.js");
   listPersonas = p.listPersonas;
   getPersonaTitle = p.getPersonaTitle;
   getPersonaTriggers = p.getPersonaTriggers;
   getMasterTitle = p.getMasterTitle;
-  const c = await import("../../../elias/src/helpers/commands.js");
+  const c = await import("../../../eliasCore/src/helpers/commands.js");
   renamePersona = (c as any).renamePersona;
-  const cr = await import("../../../elias/src/helpers/channelRegistry.js");
+  const cr = await import("../../../eliasCore/src/helpers/channelRegistry.js");
   loadChannels = cr.loadChannels;
   saveChannels = cr.saveChannels;
 }
@@ -49,7 +49,7 @@ router.get("/:name", async (req, res) => {
   try {
     if (!listPersonas) await load();
     const { name } = req.params;
-    const { PATHS } = await import("../../../elias/src/config.js");
+    const { PATHS } = await import("../../../eliasCore/src/config.js");
 
     // Read persona file
     const personaFile = path.join(PATHS.base, "personas", `${name}.md`);
@@ -85,7 +85,7 @@ router.put("/:name", async (req, res) => {
       fileContent?: string;
       avatarUrl?: string;
     };
-    const { PATHS } = await import("../../../elias/src/config.js");
+    const { PATHS } = await import("../../../eliasCore/src/config.js");
 
     let updated = false;
 
@@ -100,7 +100,7 @@ router.put("/:name", async (req, res) => {
 
       // Clear persona cache so changes take effect immediately
       try {
-        const p = await import("../../../elias/src/helpers/personas.js");
+        const p = await import("../../../eliasCore/src/helpers/personas.js");
         if ((p as any).clearPersonaCache) (p as any).clearPersonaCache();
       } catch {}
     }
@@ -114,7 +114,10 @@ router.put("/:name", async (req, res) => {
       if (match) {
         const ext = match[1] === "jpeg" ? "jpg" : match[1];
         const data = Buffer.from(match[2]!, "base64");
-        const avatarDir = path.join(PATHS.base, "..", "elias-web", "public", "avatars");
+        const avatarDir = path.resolve(
+          path.dirname(new URL(import.meta.url).pathname),
+          "..", "..", "public", "avatars",
+        );
         await fs.mkdir(avatarDir, { recursive: true });
         const filename = `${name}.${ext}?v=${Date.now()}`;
         await fs.writeFile(path.join(avatarDir, `${name}.${ext}`), data);

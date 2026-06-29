@@ -8,7 +8,7 @@ let VAULT_ROOT: string;
 let ELIAS_DATA_ROOT: string;
 
 async function loadRoots() {
-  const shared = await import("../../../elias/src/helpers/tools/shared.js");
+  const shared = await import("../../../eliasCore/src/helpers/tools/shared.js");
   VAULT_ROOT = shared.VAULT_ROOT;
   ELIAS_DATA_ROOT = shared.ELIAS_DATA_ROOT;
 }

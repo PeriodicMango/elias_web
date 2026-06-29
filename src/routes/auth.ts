@@ -9,7 +9,7 @@ const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI ?? "http://localhost:3457/
 // Import elias auth to check master ID
 let getMasterId: () => Promise<string>;
 async function loadEliasAuth() {
-  const mod = await import("../../../elias/src/helpers/auth.js");
+  const mod = await import("../../../eliasCore/src/helpers/auth.js");
   getMasterId = mod.getMasterId;
 }
 
