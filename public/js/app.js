@@ -3,7 +3,8 @@ const state = {
   user: null,
   personas: [],
   activePersona: "elias",
-  activeTab: "chat"
+  activeTab: "chat",
+  chatMessages: []
 };
 document.addEventListener("DOMContentLoaded", async () => {
   await checkAuth();
@@ -95,6 +96,7 @@ function renderSidebar() {
     item.className = `persona-item${p.name === state.activePersona ? " active" : ""}`;
     item.innerHTML = `<span class="persona-dot"></span> ${p.displayName}`;
     item.addEventListener("click", () => {
+      if (state.activePersona !== p.name) state.chatMessages = [];
       state.activePersona = p.name;
       renderSidebar();
       if (state.activeTab === "chat") renderChat();
@@ -174,6 +176,7 @@ async function renderChat() {
   });
   document.getElementById("btn-clear-history").addEventListener("click", async () => {
     await postJSON("/api/chat/clear");
+    state.chatMessages = [];
     msgs.innerHTML = '<div class="chat-empty">\u5386\u53F2\u5DF2\u6E05\u9664</div>';
   });
   async function send() {
@@ -218,6 +221,11 @@ async function renderChat() {
   });
   btn.addEventListener("click", send);
   msgContainer = msgs;
+  // Restore messages from state
+  for (const m of state.chatMessages) {
+    const restored = addMsg(m.role, m.content, false);
+    if (m.loading) restored.classList.add("loading");
+  }
 }
 let msgContainer = null;
 let msgCounter = 0;
@@ -240,6 +248,8 @@ function addMsg(role, content, loading = false) {
   `;
   msgContainer.appendChild(el);
   msgContainer.scrollTop = msgContainer.scrollHeight;
+  // Save to state for persistence across tab switches
+  state.chatMessages.push({ role, content, loading, el: null });
   return el;
 }
 // --- Personas Tab ---
