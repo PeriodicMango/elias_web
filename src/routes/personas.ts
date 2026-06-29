@@ -105,8 +105,25 @@ router.put("/:name", async (req, res) => {
       } catch {}
     }
 
-    // Update avatar in channels.json
-    if (avatarUrl !== undefined) {
+    // Handle avatar data (base64 image upload)
+    const { avatarData } = req.body as { avatarData?: string };
+    let finalAvatarUrl = avatarUrl;
+
+    if (avatarData && avatarData.startsWith("data:image")) {
+      const match = avatarData.match(/^data:image\/(\w+);base64,(.+)$/);
+      if (match) {
+        const ext = match[1] === "jpeg" ? "jpg" : match[1];
+        const data = Buffer.from(match[2]!, "base64");
+        const avatarDir = path.join(PATHS.base, "..", "elias-web", "public", "avatars");
+        await fs.mkdir(avatarDir, { recursive: true });
+        const filename = `${name}.${ext}?v=${Date.now()}`;
+        await fs.writeFile(path.join(avatarDir, `${name}.${ext}`), data);
+        finalAvatarUrl = `/avatars/${filename}`;
+      }
+    }
+
+    // Update avatar URL in channels.json
+    if (finalAvatarUrl !== undefined) {
       const channels = await loadChannels();
       if (!channels.personas) channels.personas = {};
       if (!channels.personas[name]) {
@@ -117,7 +134,7 @@ router.put("/:name", async (req, res) => {
           enabled: false,
         };
       }
-      channels.personas[name].avatarUrl = avatarUrl;
+      channels.personas[name].avatarUrl = finalAvatarUrl;
       await saveChannels(channels);
       updated = true;
     }

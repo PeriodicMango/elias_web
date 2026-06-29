@@ -238,7 +238,7 @@ function addMsg(role, content, loading = false) {
   const persona = state.personas.find((p) => p.name === state.activePersona);
   const avatarLetter = role === "user" ? state.user?.username?.[0] || "U" : persona?.displayName?.[0] || "E";
   const avatarUrl = role === "user" ? (state.user?.avatar ? `https://cdn.discordapp.com/avatars/${state.user.id}/${state.user.avatar}.png?size=64` : "") : (persona?.avatarUrl || "");
-  const avatarHTML = avatarUrl ? `<img src="${escapeHtml(avatarUrl)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none';this.parentElement.textContent='${escapeHtml(avatarLetter)}';" alt="">` : escapeHtml(avatarLetter);
+  const avatarHTML = avatarUrl ? `<img src="${escapeHtml(avatarUrl)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;" onerror="this.outerHTML='<span>${escapeHtml(avatarLetter)}</span>';" alt="">` : escapeHtml(avatarLetter);
   el.innerHTML = `
     <div class="msg-avatar">${avatarHTML}</div>
     <div class="msg-bubble">
@@ -279,8 +279,12 @@ async function renderPersonasTab() {
         </div>
         <div class="card-body">
           <div class="form-group">
-            <label class="form-label">头像 URL</label>
-            <input class="form-input" value="${escapeHtml(d.avatarUrl || "")}" placeholder="https://..." data-pname="${escapeHtml(d.name)}" data-field="avatarUrl">
+            <label class="form-label">头像</label>
+            <div style="display:flex;gap:var(--space-sm);align-items:center;">
+              <input class="form-input" value="${escapeHtml(d.avatarUrl || "")}" placeholder="URL 或上传图片" data-pname="${escapeHtml(d.name)}" data-field="avatarUrl" style="flex:1;">
+              <input type="file" accept="image/*" data-pname="${escapeHtml(d.name)}" data-field="avatarFile" style="display:none;">
+              <button class="btn btn-sm" data-pname="${escapeHtml(d.name)}" data-action="upload-avatar">上传</button>
+            </div>
           </div>
           <div class="form-group">
             <label class="form-label">称呼我为</label>
@@ -302,6 +306,28 @@ async function renderPersonasTab() {
   }
 
   main.innerHTML = html;
+
+  // Upload button handlers
+  main.querySelectorAll("[data-action='upload-avatar']").forEach((btn) => {
+    btn.addEventListener("click", function () {
+      const pname = this.dataset.pname;
+      const card = this.closest(".card");
+      const fileInput = card.querySelector("[data-field='avatarFile']");
+      fileInput.click();
+      fileInput.addEventListener("change", function () {
+        const file = this.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          card.querySelector("[data-field='avatarUrl']").value = e.target.result;
+          // Update preview
+          const img = card.querySelector(".card-header img");
+          if (img) img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+  });
 
   // Save button handlers
   main.querySelectorAll("[data-action='save-persona']").forEach((btn) => {
@@ -328,11 +354,17 @@ async function renderPersonasTab() {
         updatedContent = updatedContent.replace(/---\n/, `---\ndisplay_name: ${displayName}\n`);
       }
 
+      const avatarValue = card.querySelector("[data-field='avatarUrl']").value;
+      const isBase64 = avatarValue.startsWith("data:image");
+      const body = isBase64
+        ? JSON.stringify({ fileContent: updatedContent, avatarData: avatarValue })
+        : JSON.stringify({ fileContent: updatedContent, avatarUrl: avatarValue });
+
       try {
         await fetch(`/api/personas/${pname}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ fileContent: updatedContent, avatarUrl }),
+          body,
         });
         alert("已保存！刷新页面后生效。");
       } catch (e) {
