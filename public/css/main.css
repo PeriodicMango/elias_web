@@ -131,7 +131,7 @@ a:hover { opacity: 0.8; }
   border-right: 1px solid var(--border);
   transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.sidebar.collapsed { width: 64px; }
+.sidebar.collapsed { width: 64px; overflow: hidden; }
 
 /* Sidebar toggle */
 .sidebar-toggle {
@@ -155,15 +155,29 @@ a:hover { opacity: 0.8; }
   font-size: var(--fs-lg); font-weight: 700;
   color: var(--text-sidebar);
   border-bottom: 1px solid var(--border);
+  white-space: nowrap;
 }
 .sidebar-logo-icon { display: inline; }
-.sidebar.collapsed .sidebar-logo { text-align: center; padding: var(--space-md) var(--space-sm); }
+.sidebar.collapsed .sidebar-logo { text-align: center; padding: var(--space-md) var(--space-xs); }
 .sidebar.collapsed .sidebar-logo-icon { font-size: 1.4em; }
-.sidebar.collapsed .sidebar-logo-text,
-.sidebar.collapsed .nav-item span:not(.nav-icon),
+.sidebar.collapsed .sidebar-logo-text { display: none; }
+
+/* Nav items — collapsed: icon only */
+.nav-item { white-space: nowrap; }
+.sidebar.collapsed .nav-item { justify-content: center; padding: 10px 0; }
+.sidebar.collapsed .nav-item span { display: none; }
+.sidebar.collapsed .nav-item .nav-icon { display: inline; font-size: 1.35em; width: auto; }
+
+/* Collapsed: hide sections entirely */
 .sidebar.collapsed .sidebar-section-label,
-.sidebar.collapsed .persona-list,
-.sidebar.collapsed .sidebar-user { display: none; }
+.sidebar.collapsed .persona-list { display: none; }
+
+/* Collapsed: user area — keep avatar, hide text */
+.sidebar.collapsed .sidebar-user {
+  justify-content: center; padding: var(--space-md) 0;
+}
+.sidebar.collapsed #sidebar-username,
+.sidebar.collapsed .btn-logout { display: none; }
 
 /* Nav */
 .sidebar-nav { flex: 1; padding: var(--space-sm) 0; }
@@ -179,8 +193,6 @@ a:hover { opacity: 0.8; }
   color: var(--text-sidebar-active); background: var(--bg-sidebar-active); font-weight: 550;
 }
 .nav-icon { font-size: 1.15em; width: 1.5em; text-align: center; }
-.sidebar.collapsed .nav-item { justify-content: center; padding: 10px var(--space-sm); }
-.sidebar.collapsed .nav-icon { width: auto; font-size: 1.35em; }
 
 .sidebar-section-label {
   padding: var(--space-md) var(--space-lg) var(--space-xs);
