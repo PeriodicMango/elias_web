@@ -155,7 +155,7 @@ a:hover { opacity: 0.8; }
 
 /* Sidebar toggle */
 .sidebar-toggle {
-  position: absolute; top: 18px; right: 8px;
+  position: absolute; top: 18px; right: -15px;
   width: 30px; height: 30px; border-radius: 50%;
   border: 1px solid var(--border-solid);
   background: var(--bg-card-solid);
