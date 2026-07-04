@@ -1,9 +1,9 @@
 /* ============================================================
-   Elias Web Console — Homepage
+   Elias Web Console — Homepage (Apple Glass)
    ============================================================ */
 
 .home-container {
-  max-width: 720px;
+  max-width: 680px;
   margin: 0 auto;
   padding: var(--space-xl) var(--space-md);
   display: flex;
@@ -14,10 +14,11 @@
 /* --- Greeting --- */
 .home-greeting {
   text-align: center;
-  padding: var(--space-xl) 0 var(--space-md);
+  padding: 48px 0 32px;
   opacity: 0;
-  transform: translateY(8px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
+  transform: translateY(12px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .home-greeting.loaded {
@@ -26,33 +27,37 @@
 }
 
 .home-greeting-text {
-  font-size: 1.6rem;
-  font-weight: 600;
+  font-size: 2rem;
+  font-weight: 700;
   color: var(--text-primary);
-  line-height: 1.5;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
 }
 
 .home-greeting-persona {
   font-size: var(--fs-sm);
   color: var(--text-secondary);
-  margin-top: var(--space-sm);
+  margin-top: 12px;
+  font-weight: 500;
 }
 
-/* --- Chatbox --- */
+/* --- Chatbox (glassy search bar) --- */
 .home-chatbox {
   display: flex;
   gap: var(--space-sm);
   background: var(--bg-card);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-pill);
+  padding: 6px 6px 6px 20px;
   box-shadow: var(--shadow-card);
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .home-chatbox:focus-within {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-light);
+  box-shadow: 0 0 0 4px var(--accent-light);
 }
 
 .home-chatbox input {
@@ -60,9 +65,9 @@
   border: none;
   outline: none;
   background: transparent;
-  font-size: var(--fs-base);
+  font-size: 1.05rem;
   color: var(--text-primary);
-  padding: var(--space-sm) 0;
+  padding: 10px 0;
 }
 
 .home-chatbox input::placeholder {
@@ -73,20 +78,21 @@
   background: var(--accent);
   color: #fff;
   border: none;
-  border-radius: var(--radius-sm);
-  width: 40px;
-  height: 40px;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
   cursor: pointer;
   font-size: 1.2rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.15s;
   flex-shrink: 0;
 }
 
 .home-chatbox button:hover {
   background: var(--accent-hover);
+  transform: scale(1.04);
 }
 
 /* --- Widgets --- */
@@ -104,37 +110,47 @@
 
 .home-widgets-title {
   font-size: var(--fs-lg);
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
+  letter-spacing: -0.01em;
 }
 
-/* All widget types dropdown */
+/* Add button */
 .widget-add-btn {
   background: var(--bg-card);
-  border: 1px dashed var(--border);
-  border-radius: var(--radius);
-  padding: var(--space-sm) var(--space-md);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 8px 18px;
   cursor: pointer;
   font-size: var(--fs-sm);
-  color: var(--text-secondary);
-  transition: border-color 0.2s, color 0.2s;
+  font-weight: 500;
+  color: var(--accent);
+  transition: background 0.2s, box-shadow 0.2s;
 }
 
 .widget-add-btn:hover {
+  background: var(--accent);
+  color: #fff;
   border-color: var(--accent);
-  color: var(--accent);
 }
 
+/* Type selection menu */
 .widget-type-menu {
   display: none;
   position: absolute;
-  background: var(--bg-card);
+  right: 0;
+  top: calc(100% + 4px);
+  background: var(--bg-card-solid);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow-card-hover);
   z-index: 10;
-  min-width: 180px;
-  padding: var(--space-sm) 0;
+  min-width: 200px;
+  padding: 6px 0;
 }
 
 .widget-type-menu.show {
@@ -142,14 +158,14 @@
 }
 
 .widget-type-item {
-  padding: var(--space-sm) var(--space-md);
+  padding: 10px 16px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
+  gap: 10px;
   font-size: var(--fs-sm);
   color: var(--text-primary);
-  transition: background 0.15s;
+  transition: background 0.12s;
 }
 
 .widget-type-item:hover {
@@ -157,28 +173,33 @@
 }
 
 .widget-type-item .widget-type-icon {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
+  width: 24px;
+  text-align: center;
 }
 
 /* --- Widget Grid --- */
 .widget-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: var(--space-md);
 }
 
 .widget-card {
   background: var(--bg-card);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: var(--space-md);
   box-shadow: var(--shadow-card);
   position: relative;
-  transition: box-shadow 0.2s;
+  transition: box-shadow 0.25s, transform 0.25s;
 }
 
 .widget-card:hover {
   box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
 }
 
 .widget-card-header {
@@ -189,7 +210,7 @@
 }
 
 .widget-card-icon {
-  font-size: 1.3rem;
+  font-size: 1.4rem;
 }
 
 .widget-card-title {
@@ -203,10 +224,14 @@
   border: none;
   cursor: pointer;
   color: var(--text-secondary);
-  font-size: 1rem;
-  padding: 2px 6px;
-  border-radius: var(--radius-sm);
-  transition: color 0.15s, background 0.15s;
+  font-size: 0.9rem;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
   opacity: 0;
 }
 
@@ -215,14 +240,14 @@
 }
 
 .widget-card-remove:hover {
-  color: #ef4444;
-  background: #fef2f2;
+  color: #fff;
+  background: var(--danger);
 }
 
 .widget-card-body {
   font-size: var(--fs-sm);
   color: var(--text-secondary);
-  min-height: 48px;
+  min-height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -231,8 +256,8 @@
 .widget-card-placeholder {
   text-align: center;
   color: var(--text-secondary);
-  font-style: italic;
   padding: var(--space-md);
+  font-size: var(--fs-sm);
 }
 
 /* --- Widget empty state --- */
