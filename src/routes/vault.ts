@@ -70,7 +70,7 @@ router.get("/read", async (req, res) => {
     if (!filePath) return res.status(400).json({ error: "path 参数是必填项。" });
 
     const root = source === "vault" ? vaultRoot : eliasDataRoot;
-    const fullPath = shared.shared.safeResolve(root, filePath);
+    const fullPath = shared.safeResolve(root, filePath);
     const content = await fs.readFile(fullPath, "utf8");
     res.json({ path: filePath, source, content });
   } catch (err: unknown) {
