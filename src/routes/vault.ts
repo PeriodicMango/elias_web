@@ -14,14 +14,6 @@ interface TreeNode {
 
 const sharedLoader = createLoader(() => import("../../../eliasCore/src/helpers/tools/shared.js"));
 
-function safeResolve(root: string, filePath: string): string {
-  const resolved = path.resolve(root, filePath);
-  if (!resolved.startsWith(root)) {
-    throw new Error(`Access denied: ${filePath} is outside root`);
-  }
-  return resolved;
-}
-
 // GET /api/vault/tree — recursive directory tree of BOTH vault + elias_data
 router.get("/tree", async (_req, res) => {
   try {
@@ -78,7 +70,7 @@ router.get("/read", async (req, res) => {
     if (!filePath) return res.status(400).json({ error: "path 参数是必填项。" });
 
     const root = source === "vault" ? vaultRoot : eliasDataRoot;
-    const fullPath = safeResolve(root, filePath);
+    const fullPath = shared.shared.safeResolve(root, filePath);
     const content = await fs.readFile(fullPath, "utf8");
     res.json({ path: filePath, source, content });
   } catch (err: unknown) {
@@ -96,7 +88,7 @@ router.post("/write", async (req, res) => {
     if (!filePath) return res.status(400).json({ error: "filePath 是必填项。" });
     if (content === undefined) return res.status(400).json({ error: "content 是必填项。" });
 
-    const fullPath = safeResolve(eliasDataRoot, filePath);
+    const fullPath = shared.safeResolve(eliasDataRoot, filePath);
     await fs.mkdir(path.dirname(fullPath), { recursive: true });
     await fs.writeFile(fullPath, content, "utf8");
     res.json({ ok: true, path: filePath });
@@ -114,7 +106,7 @@ router.delete("/delete", async (req, res) => {
     const filePath = req.body.filePath as string;
     if (!filePath) return res.status(400).json({ error: "filePath 是必填项。" });
 
-    const fullPath = safeResolve(eliasDataRoot, filePath);
+    const fullPath = shared.safeResolve(eliasDataRoot, filePath);
     await fs.unlink(fullPath);
     res.json({ ok: true });
   } catch (err: unknown) {
