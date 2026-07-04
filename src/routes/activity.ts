@@ -4,7 +4,7 @@ import { createLoader } from "../lazyLoad.js";
 const router = Router();
 
 const activityLoader = createLoader(() =>
-  import("../../../eliasCore/src/helpers/tools/executors/activity.js"),
+  import("../../../../eliasCore/src/helpers/tools/executors/activity.js"),
 );
 
 // GET /api/activity?date=YYYY-MM-DD

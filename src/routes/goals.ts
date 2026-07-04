@@ -4,7 +4,7 @@ import { createLoader } from "../lazyLoad.js";
 const router = Router();
 
 const goalsLoader = createLoader(() =>
-  import("../../../eliasCore/src/helpers/tools/executors/goals.js"),
+  import("../../../../eliasCore/src/helpers/tools/executors/goals.js"),
 );
 
 router.get("/", async (_req, res) => {

@@ -3,7 +3,7 @@ import { createLoader } from "../lazyLoad.js";
 
 const router = Router();
 
-const authLoader = createLoader(() => import("../../../eliasCore/src/helpers/auth.js"));
+const authLoader = createLoader(() => import("../../../../eliasCore/src/helpers/auth.js"));
 
 router.get("/", async (_req, res) => {
   try {

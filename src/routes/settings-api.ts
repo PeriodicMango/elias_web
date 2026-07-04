@@ -3,7 +3,7 @@ import { createLoader } from "../lazyLoad.js";
 
 const router = Router();
 
-const configLoader = createLoader(() => import("../../../eliasCore/src/config.js"));
+const configLoader = createLoader(() => import("../../../../eliasCore/src/config.js"));
 
 router.get("/", async (_req, res) => {
   const config = await configLoader();

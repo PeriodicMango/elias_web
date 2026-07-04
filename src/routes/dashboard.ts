@@ -3,9 +3,9 @@ import { createLoader } from "../lazyLoad.js";
 
 const router = Router();
 
-const configLoader = createLoader(() => import("../../../eliasCore/src/config.js"));
-const authLoader = createLoader(() => import("../../../eliasCore/src/helpers/auth.js"));
-const personasLoader = createLoader(() => import("../../../eliasCore/src/helpers/personas.js"));
+const configLoader = createLoader(() => import("../../../../eliasCore/src/config.js"));
+const authLoader = createLoader(() => import("../../../../eliasCore/src/helpers/auth.js"));
+const personasLoader = createLoader(() => import("../../../../eliasCore/src/helpers/personas.js"));
 
 router.get("/", async (_req, res) => {
   try {

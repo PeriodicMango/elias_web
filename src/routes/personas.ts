@@ -5,9 +5,9 @@ import { createLoader } from "../lazyLoad.js";
 
 const router = Router();
 
-const personasLoader = createLoader(() => import("../../../eliasCore/src/helpers/personas.js"));
-const commandsLoader = createLoader(() => import("../../../eliasCore/src/helpers/commands.js"));
-const channelLoader = createLoader(() => import("../../../eliasCore/src/helpers/channelRegistry.js"));
+const personasLoader = createLoader(() => import("../../../../eliasCore/src/helpers/personas.js"));
+const commandsLoader = createLoader(() => import("../../../../eliasCore/src/helpers/commands.js"));
+const channelLoader = createLoader(() => import("../../../../eliasCore/src/helpers/channelRegistry.js"));
 
 // GET /api/personas — list all personas (basic info)
 router.get("/", async (_req, res) => {
@@ -34,7 +34,7 @@ router.get("/:name", async (req, res) => {
   try {
     const p = await personasLoader();
     const { name } = req.params;
-    const { PATHS } = await import("../../../eliasCore/src/config.js");
+    const { PATHS } = await import("../../../../eliasCore/src/config.js");
 
     // Read persona file
     const personaFile = path.join(PATHS.base, "personas", `${name}.md`);
@@ -72,7 +72,7 @@ router.put("/:name", async (req, res) => {
       fileContent?: string;
       avatarUrl?: string;
     };
-    const { PATHS } = await import("../../../eliasCore/src/config.js");
+    const { PATHS } = await import("../../../../eliasCore/src/config.js");
 
     let updated = false;
 

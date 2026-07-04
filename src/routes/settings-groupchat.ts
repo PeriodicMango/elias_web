@@ -3,8 +3,8 @@ import { createLoader } from "../lazyLoad.js";
 
 const router = Router();
 
-const channelLoader = createLoader(() => import("../../../eliasCore/src/helpers/channelRegistry.js"));
-const personasLoader = createLoader(() => import("../../../eliasCore/src/helpers/personas.js"));
+const channelLoader = createLoader(() => import("../../../../eliasCore/src/helpers/channelRegistry.js"));
+const personasLoader = createLoader(() => import("../../../../eliasCore/src/helpers/personas.js"));
 
 router.get("/", async (_req, res) => {
   try {

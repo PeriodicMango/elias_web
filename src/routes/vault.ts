@@ -12,7 +12,7 @@ interface TreeNode {
   children: TreeNode[];
 }
 
-const sharedLoader = createLoader(() => import("../../../eliasCore/src/helpers/tools/shared.js"));
+const sharedLoader = createLoader(() => import("../../../../eliasCore/src/helpers/tools/shared.js"));
 
 // GET /api/vault/tree — recursive directory tree of BOTH vault + elias_data
 router.get("/tree", async (_req, res) => {

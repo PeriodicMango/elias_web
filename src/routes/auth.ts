@@ -7,7 +7,7 @@ const CLIENT_ID = process.env.DISCORD_CLIENT_ID ?? "";
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET ?? "";
 const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI ?? "http://localhost:3457/auth/callback";
 
-const authLoader = createLoader(() => import("../../../eliasCore/src/helpers/auth.js"));
+const authLoader = createLoader(() => import("../../../../eliasCore/src/helpers/auth.js"));
 
 // --- GET /auth/login --- redirect to Discord OAuth ---
 router.get("/login", (_req, res) => {

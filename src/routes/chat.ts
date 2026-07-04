@@ -1,18 +1,18 @@
 import { Router } from "express";
-import { parseMoodTag } from "../../../eliasCore/src/helpers/moodParser.js";
+import { parseMoodTag } from "../../../../eliasCore/src/helpers/moodParser.js";
 import { createLoader } from "../lazyLoad.js";
-import type { ChatMessage } from "../../../eliasCore/src/llm.js";
+import type { ChatMessage } from "../../../../eliasCore/src/llm.js";
 
 const router = Router();
 
 // Module loaders — each module is lazy-loaded once, cached thereafter
-const llmLoader = createLoader(() => import("../../../eliasCore/src/llm.js"));
-const promptLoader = createLoader(() => import("../../../eliasCore/src/prompt.js"));
-const memoryLoader = createLoader(() => import("../../../eliasCore/src/memory.js"));
-const historyLoader = createLoader(() => import("../../../eliasCore/src/helpers/history.js"));
-const configLoader = createLoader(() => import("../../../eliasCore/src/config.js"));
-const statusLoader = createLoader(() => import("../../../eliasCore/src/helpers/status.js"));
-const toolsLoader = createLoader(() => import("../../../eliasCore/src/helpers/tools/index.js"));
+const llmLoader = createLoader(() => import("../../../../eliasCore/src/llm.js"));
+const promptLoader = createLoader(() => import("../../../../eliasCore/src/prompt.js"));
+const memoryLoader = createLoader(() => import("../../../../eliasCore/src/memory.js"));
+const historyLoader = createLoader(() => import("../../../../eliasCore/src/helpers/history.js"));
+const configLoader = createLoader(() => import("../../../../eliasCore/src/config.js"));
+const statusLoader = createLoader(() => import("../../../../eliasCore/src/helpers/status.js"));
+const toolsLoader = createLoader(() => import("../../../../eliasCore/src/helpers/tools/index.js"));
 
 // POST /api/chat
 router.post("/", async (req, res) => {
@@ -44,7 +44,7 @@ router.post("/", async (req, res) => {
     // 1. Load persona identity
     const [soul, title] = await Promise.all([
       prompt.loadSoul(p),
-      import("../../../eliasCore/src/helpers/personas.js").then((m) =>
+      import("../../../../eliasCore/src/helpers/personas.js").then((m) =>
         m.getPersonaTitle(p),
       ),
     ]);
