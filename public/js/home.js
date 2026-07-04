@@ -176,9 +176,12 @@ export async function renderHome(persona) {
   const main = document.getElementById('main-content');
   main.innerHTML = `
     <div class="home-container">
-      <div class="home-greeting" id="home-greeting">
-        <div class="home-greeting-text">…</div>
-        <div class="home-greeting-persona"></div>
+      <div class="home-greeting-wrapper">
+        <div class="home-greeting-glow"></div>
+        <div class="home-greeting" id="home-greeting">
+          <div class="home-greeting-text">…</div>
+          <div class="home-greeting-persona"></div>
+        </div>
       </div>
 
       <div class="home-chatbox" id="home-chatbox">

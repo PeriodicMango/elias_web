@@ -1,9 +1,10 @@
 /* ============================================================
-   Elias Web Console — Homepage (Apple Glass)
+   Elias Web Console — Homepage (Fluffy Glass)
+   Signature: glowing aura behind the greeting
    ============================================================ */
 
 .home-container {
-  max-width: 680px;
+  max-width: 660px;
   margin: 0 auto;
   padding: var(--space-xl) var(--space-md);
   display: flex;
@@ -11,260 +12,195 @@
   gap: var(--space-xl);
 }
 
-/* --- Greeting --- */
-.home-greeting {
+/* --- Greeting section with glow aura --- */
+.home-greeting-wrapper {
+  position: relative;
+  padding: 56px 0 40px;
   text-align: center;
-  padding: 48px 0 32px;
-  opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.home-greeting.loaded {
-  opacity: 1;
-  transform: translateY(0);
+/* The glow — a soft radial light blue aura behind the greeting */
+.home-greeting-glow {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 340px; height: 140px;
+  background: radial-gradient(ellipse at center,
+    rgba(91,154,255,0.18) 0%,
+    rgba(91,154,255,0.06) 40%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  pointer-events: none;
+  animation: glowPulse 6s ease-in-out infinite;
+  filter: blur(20px);
 }
+
+@keyframes glowPulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+  50%      { transform: translate(-50%, -50%) scale(1.25); opacity: 1; }
+}
+
+.home-greeting {
+  position: relative;
+  z-index: 1;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.home-greeting.loaded { opacity: 1; transform: translateY(0); }
 
 .home-greeting-text {
   font-size: 2rem;
-  font-weight: 700;
+  font-weight: 650;
   color: var(--text-primary);
-  line-height: 1.3;
-  letter-spacing: -0.02em;
+  line-height: 1.35;
+  letter-spacing: -0.025em;
+  max-width: 440px;
+  margin: 0 auto;
 }
 
 .home-greeting-persona {
   font-size: var(--fs-sm);
-  color: var(--text-secondary);
-  margin-top: 12px;
+  color: var(--text-tertiary);
+  margin-top: 14px;
   font-weight: 500;
 }
 
-/* --- Chatbox (glassy search bar) --- */
+/* --- Chatbox — pill, floating glass --- */
 .home-chatbox {
-  display: flex;
-  gap: var(--space-sm);
+  display: flex; gap: 0;
   background: var(--bg-card);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-solid);
   border-radius: var(--radius-pill);
-  padding: 6px 6px 6px 20px;
-  box-shadow: var(--shadow-card);
-  transition: border-color 0.2s, box-shadow 0.2s;
+  padding: 5px;
+  box-shadow: var(--shadow-card), 0 0 60px var(--accent-glow);
+  transition: border-color 0.25s, box-shadow 0.3s;
 }
-
 .home-chatbox:focus-within {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 4px var(--accent-light);
+  border-color: var(--accent-soft);
+  box-shadow: var(--shadow-card-hover), 0 0 80px var(--accent-glow);
 }
-
 .home-chatbox input {
-  flex: 1;
-  border: none;
-  outline: none;
-  background: transparent;
-  font-size: 1.05rem;
-  color: var(--text-primary);
-  padding: 10px 0;
+  flex: 1; border: none; outline: none; background: transparent;
+  font-size: 1.05rem; color: var(--text-primary);
+  padding: 12px 8px 12px 20px;
 }
-
-.home-chatbox input::placeholder {
-  color: var(--text-secondary);
-}
-
+.home-chatbox input::placeholder { color: var(--text-tertiary); }
 .home-chatbox button {
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: 50%;
-  width: 44px;
-  height: 44px;
-  cursor: pointer;
-  font-size: 1.2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s, transform 0.15s;
+  background: var(--accent); color: #fff; border: none;
+  border-radius: 50%; width: 46px; height: 46px;
+  cursor: pointer; font-size: 1.25rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
   flex-shrink: 0;
+  box-shadow: 0 2px 12px var(--accent-glow);
 }
-
 .home-chatbox button:hover {
   background: var(--accent-hover);
-  transform: scale(1.04);
+  transform: scale(1.06);
+  box-shadow: 0 4px 20px var(--accent-glow);
 }
 
-/* --- Widgets --- */
+/* --- Widgets section --- */
 .home-widgets {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
+  display: flex; flex-direction: column; gap: var(--space-md);
 }
-
 .home-widgets-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: flex; align-items: center; justify-content: space-between;
+  padding-bottom: var(--space-sm);
 }
-
 .home-widgets-title {
-  font-size: var(--fs-lg);
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
+  font-size: var(--fs-lg); font-weight: 650; color: var(--text-primary);
+  letter-spacing: -0.015em;
 }
 
-/* Add button */
+/* Add button — ghost pill */
 .widget-add-btn {
-  background: var(--bg-card);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--border);
+  background: transparent;
+  border: 1.5px dashed var(--border-solid);
   border-radius: var(--radius-pill);
-  padding: 8px 18px;
-  cursor: pointer;
-  font-size: var(--fs-sm);
-  font-weight: 500;
-  color: var(--accent);
-  transition: background 0.2s, box-shadow 0.2s;
+  padding: 8px 20px; cursor: pointer;
+  font-size: var(--fs-sm); font-weight: 500;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
 }
-
 .widget-add-btn:hover {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
-}
-
-/* Type selection menu */
-.widget-type-menu {
-  display: none;
-  position: absolute;
-  right: 0;
-  top: calc(100% + 4px);
-  background: var(--bg-card-solid);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-card-hover);
-  z-index: 10;
-  min-width: 200px;
-  padding: 6px 0;
-}
-
-.widget-type-menu.show {
-  display: block;
-}
-
-.widget-type-item {
-  padding: 10px 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: var(--fs-sm);
-  color: var(--text-primary);
-  transition: background 0.12s;
-}
-
-.widget-type-item:hover {
+  border-color: var(--accent); color: var(--accent);
   background: var(--accent-light);
 }
 
-.widget-type-item .widget-type-icon {
-  font-size: 1.15rem;
-  width: 24px;
-  text-align: center;
+/* Type menu */
+.widget-type-menu {
+  display: none; position: absolute; right: 0; top: calc(100% + 6px);
+  background: var(--bg-card-solid);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow-card-hover); z-index: 10;
+  min-width: 210px; padding: 6px 0;
 }
+.widget-type-menu.show { display: block; }
+.widget-type-item {
+  padding: 11px 18px; cursor: pointer;
+  display: flex; align-items: center; gap: 10px;
+  font-size: var(--fs-sm); color: var(--text-primary);
+  transition: background 0.12s;
+}
+.widget-type-item:hover { background: var(--accent-light); }
+.widget-type-item .widget-type-icon { font-size: 1.15rem; width: 24px; text-align: center; }
 
 /* --- Widget Grid --- */
 .widget-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
   gap: var(--space-md);
 }
-
 .widget-card {
   background: var(--bg-card);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
   box-shadow: var(--shadow-card);
   position: relative;
-  transition: box-shadow 0.25s, transform 0.25s;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
-
 .widget-card:hover {
   box-shadow: var(--shadow-card-hover);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  background: var(--bg-card-hover);
 }
-
 .widget-card-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
+  display: flex; align-items: center; gap: var(--space-sm);
   margin-bottom: var(--space-sm);
 }
-
-.widget-card-icon {
-  font-size: 1.4rem;
-}
-
-.widget-card-title {
-  font-size: var(--fs-base);
-  font-weight: 600;
-  flex: 1;
-}
-
+.widget-card-icon   { font-size: 1.45rem; }
+.widget-card-title  { font-size: var(--fs-base); font-weight: 600; flex: 1; }
 .widget-card-remove {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s;
-  opacity: 0;
+  background: none; border: none; cursor: pointer;
+  color: var(--text-tertiary); font-size: 0.85rem;
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s ease; opacity: 0;
 }
-
-.widget-card:hover .widget-card-remove {
-  opacity: 1;
-}
-
-.widget-card-remove:hover {
-  color: #fff;
-  background: var(--danger);
-}
-
+.widget-card:hover .widget-card-remove { opacity: 1; }
+.widget-card-remove:hover { color: #fff; background: var(--danger); }
 .widget-card-body {
-  font-size: var(--fs-sm);
-  color: var(--text-secondary);
-  min-height: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-size: var(--fs-sm); color: var(--text-secondary);
+  min-height: 60px; display: flex; align-items: center; justify-content: center;
 }
-
 .widget-card-placeholder {
-  text-align: center;
-  color: var(--text-secondary);
-  padding: var(--space-md);
-  font-size: var(--fs-sm);
+  text-align: center; color: var(--text-tertiary);
+  padding: var(--space-md); font-size: var(--fs-sm);
 }
 
-/* --- Widget empty state --- */
+/* Empty state */
 .widget-grid-empty {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: var(--space-xl);
-  color: var(--text-secondary);
-  font-size: var(--fs-sm);
+  grid-column: 1 / -1; text-align: center;
+  padding: var(--space-2xl); color: var(--text-tertiary); font-size: var(--fs-sm);
 }
