@@ -54,9 +54,14 @@ async function showApp() {
   const toggleBtn = document.getElementById("sidebar-toggle");
   const collapsed = localStorage.getItem("elias-sidebar-collapsed") === "true";
   if (collapsed) sidebar.classList.add("collapsed");
-  toggleBtn.addEventListener("click", () => {
+  const doToggle = () => {
     sidebar.classList.toggle("collapsed");
     localStorage.setItem("elias-sidebar-collapsed", String(sidebar.classList.contains("collapsed")));
+  };
+  toggleBtn.addEventListener("click", doToggle);
+  // Click logo area to expand when collapsed
+  document.querySelector(".sidebar-logo").addEventListener("click", (e) => {
+    if (sidebar.classList.contains("collapsed") && e.target !== toggleBtn) doToggle();
   });
 
   await loadPersonas();
