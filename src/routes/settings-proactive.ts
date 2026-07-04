@@ -1,50 +1,41 @@
 import { Router } from "express";
+import { createLoader } from "../lazyLoad.js";
 
 const router = Router();
 
-let isPaused: Function;
-let getProactiveDisabledPersonas: Function;
-let setPersonaProactiveDisabled: Function;
-let listPersonas: Function;
-
-async function load() {
-  const p = await import("../../../eliasCore/src/helpers/proactive.js");
-  isPaused = p.isPaused;
-  getProactiveDisabledPersonas = p.getProactiveDisabledPersonas;
-  setPersonaProactiveDisabled = p.setPersonaProactiveDisabled;
-  const per = await import("../../../eliasCore/src/helpers/personas.js");
-  listPersonas = per.listPersonas;
-}
+const proactiveLoader = createLoader(() => import("../../../eliasCore/src/helpers/proactive.js"));
+const personasLoader = createLoader(() => import("../../../eliasCore/src/helpers/personas.js"));
+const configLoader = createLoader(() => import("../../../eliasCore/src/config.js"));
 
 router.get("/", async (_req, res) => {
   try {
-    if (!isPaused) await load();
+    const [proactive, p] = await Promise.all([proactiveLoader(), personasLoader()]);
     const [paused, disabled, names] = await Promise.all([
-      isPaused(), getProactiveDisabledPersonas(), listPersonas(),
+      proactive.isPaused(),
+      proactive.getProactiveDisabledPersonas(),
+      p.listPersonas(),
     ]);
 
     // Read pause until
     let pausedUntil: string | null = null;
     try {
-      const { readDataJson } = await import("../../../eliasCore/src/helpers/auth.js");
-      const data = await readDataJson();
+      const config = await configLoader();
+      const data = await config.readDataJson();
       pausedUntil = (data.proactivePausedUntil as string) ?? null;
     } catch {}
 
     const personas = await Promise.all(
-      (names as string[]).map(async (name: string) => {
-        const titleMod = await import("../../../eliasCore/src/helpers/personas.js");
-        return {
-          name,
-          displayName: await titleMod.getPersonaTitle(name),
-          proactiveEnabled: !(disabled as string[]).includes(name),
-        };
-      }),
+      names.map(async (name: string) => ({
+        name,
+        displayName: await p.getPersonaTitle(name),
+        proactiveEnabled: !(disabled as string[]).includes(name),
+      })),
     );
 
     res.json({ paused, pausedUntil, personas });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: message });
   }
 });
 
@@ -61,44 +52,47 @@ router.post("/pause", async (req, res) => {
     const ms = unit.startsWith("h") || unit === "小时" ? n * 3600000 : n * 60000;
     const until = new Date(Date.now() + ms).toISOString();
 
-    const { readDataJson } = await import("../../../eliasCore/src/helpers/auth.js");
-    const data = await readDataJson();
+    const config = await configLoader();
+    const data = await config.readDataJson();
     data.proactivePausedUntil = until;
     const fs = await import("node:fs/promises");
     const path = await import("node:path");
-    const { PATHS } = await import("../../../eliasCore/src/config.js");
+    const { PATHS } = await configLoader();
     await fs.writeFile(path.join(PATHS.base, "data.json"), JSON.stringify(data, null, 2), "utf8");
     res.json({ ok: true, pausedUntil: until });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: message });
   }
 });
 
 router.post("/resume", async (_req, res) => {
   try {
-    const { readDataJson } = await import("../../../eliasCore/src/helpers/auth.js");
-    const data = await readDataJson();
+    const config = await configLoader();
+    const data = await config.readDataJson();
     delete data.proactivePausedUntil;
     const fs = await import("node:fs/promises");
     const path = await import("node:path");
-    const { PATHS } = await import("../../../eliasCore/src/config.js");
+    const { PATHS } = await configLoader();
     await fs.writeFile(path.join(PATHS.base, "data.json"), JSON.stringify(data, null, 2), "utf8");
     res.json({ ok: true });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: message });
   }
 });
 
 router.put("/:persona", async (req, res) => {
   try {
-    if (!setPersonaProactiveDisabled) await load();
+    const proactive = await proactiveLoader();
     const { persona } = req.params;
     const { enabled } = req.body as { enabled?: boolean };
     if (enabled === undefined) return res.status(400).json({ error: "enabled 是必填项。" });
-    await setPersonaProactiveDisabled(persona!, !enabled);
+    await proactive.setPersonaProactiveDisabled(persona!, !enabled);
     res.json({ ok: true });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: message });
   }
 });
 

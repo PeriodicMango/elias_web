@@ -26,7 +26,11 @@ import { activityRouter } from "./routes/activity.js";
 import { requireSession } from "./middleware/auth.js";
 
 const PORT = Number(process.env.WEB_PORT) || 3457;
-const SESSION_SECRET = process.env.SESSION_SECRET || "elias-web-dev-secret";
+if (!process.env.SESSION_SECRET) {
+  console.error("[SYSTEM LOG] SESSION_SECRET is required. Set it in .env and restart.");
+  process.exit(1);
+}
+const SESSION_SECRET = process.env.SESSION_SECRET!;
 
 const app = express();
 

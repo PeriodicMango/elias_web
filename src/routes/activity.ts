@@ -1,36 +1,34 @@
 import { Router } from "express";
+import { createLoader } from "../lazyLoad.js";
 
 const router = Router();
 
-let getActivity: Function;
-let listAddresses: Function;
-
-async function load() {
-  const a = await import("../../../eliasCore/src/helpers/tools/executors/activity.js");
-  getActivity = a.getActivity;
-  listAddresses = a.listAddresses;
-}
+const activityLoader = createLoader(() =>
+  import("../../../eliasCore/src/helpers/tools/executors/activity.js"),
+);
 
 // GET /api/activity?date=YYYY-MM-DD
 router.get("/", async (req, res) => {
   try {
-    if (!getActivity) await load();
+    const a = await activityLoader();
     const date = (req.query.date as string) || new Date().toLocaleString("sv-SE", { timeZone: "Australia/Sydney" }).slice(0, 10);
-    const result = await getActivity({ date });
+    const result = await a.getActivity({ date });
     res.json({ date, content: result.content });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: message });
   }
 });
 
 // GET /api/activity/addresses
 router.get("/addresses", async (_req, res) => {
   try {
-    if (!listAddresses) await load();
-    const result = await listAddresses({});
+    const a = await activityLoader();
+    const result = await a.listAddresses({});
     res.json({ content: result.content });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: message });
   }
 });
 

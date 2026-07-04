@@ -1,53 +1,38 @@
 import { Router } from "express";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { createLoader } from "../lazyLoad.js";
 
 const router = Router();
 
-let listPersonas: Function;
-let getPersonaTitle: Function;
-let getPersonaTriggers: Function;
-let getMasterTitle: Function;
-let renamePersona: Function;
-let loadChannels: Function;
-let saveChannels: Function;
-
-async function load() {
-  const p = await import("../../../eliasCore/src/helpers/personas.js");
-  listPersonas = p.listPersonas;
-  getPersonaTitle = p.getPersonaTitle;
-  getPersonaTriggers = p.getPersonaTriggers;
-  getMasterTitle = p.getMasterTitle;
-  const c = await import("../../../eliasCore/src/helpers/commands.js");
-  renamePersona = (c as any).renamePersona;
-  const cr = await import("../../../eliasCore/src/helpers/channelRegistry.js");
-  loadChannels = cr.loadChannels;
-  saveChannels = cr.saveChannels;
-}
+const personasLoader = createLoader(() => import("../../../eliasCore/src/helpers/personas.js"));
+const commandsLoader = createLoader(() => import("../../../eliasCore/src/helpers/commands.js"));
+const channelLoader = createLoader(() => import("../../../eliasCore/src/helpers/channelRegistry.js"));
 
 // GET /api/personas — list all personas (basic info)
 router.get("/", async (_req, res) => {
   try {
-    if (!listPersonas) await load();
-    const names = await listPersonas();
+    const p = await personasLoader();
+    const names = await p.listPersonas();
     const personas = await Promise.all(
       names.map(async (name: string) => ({
         name,
-        displayName: await getPersonaTitle(name),
-        triggers: await getPersonaTriggers(name),
-        masterTitle: await getMasterTitle(name),
+        displayName: await p.getPersonaTitle(name),
+        triggers: await p.getPersonaTriggers(name),
+        masterTitle: await p.getMasterTitle(name),
       })),
     );
     res.json({ personas });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: message });
   }
 });
 
 // GET /api/personas/:name — full persona details (file content + avatar)
 router.get("/:name", async (req, res) => {
   try {
-    if (!listPersonas) await load();
+    const p = await personasLoader();
     const { name } = req.params;
     const { PATHS } = await import("../../../eliasCore/src/config.js");
 
@@ -59,27 +44,29 @@ router.get("/:name", async (req, res) => {
     }
 
     // Get channels.json avatar
-    const channels = await loadChannels();
+    const cr = await channelLoader();
+    const channels = await cr.loadChannels();
     const channelCfg = channels?.personas?.[name] || {};
-    const avatarUrl = channelCfg.avatarUrl || "";
+    const avatarUrl = (channelCfg as { avatarUrl?: string }).avatarUrl || "";
 
     res.json({
       name,
-      displayName: await getPersonaTitle(name),
-      triggers: await getPersonaTriggers(name),
-      masterTitle: await getMasterTitle(name),
+      displayName: await p.getPersonaTitle(name),
+      triggers: await p.getPersonaTriggers(name),
+      masterTitle: await p.getMasterTitle(name),
       avatarUrl,
       fileContent,
     });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: message });
   }
 });
 
 // PUT /api/personas/:name — update persona file and/or avatar
 router.put("/:name", async (req, res) => {
   try {
-    if (!listPersonas) await load();
+    const p = await personasLoader();
     const { name } = req.params;
     const { fileContent, avatarUrl } = req.body as {
       fileContent?: string;
@@ -99,10 +86,7 @@ router.put("/:name", async (req, res) => {
       updated = true;
 
       // Clear persona cache so changes take effect immediately
-      try {
-        const p = await import("../../../eliasCore/src/helpers/personas.js");
-        if ((p as any).clearPersonaCache) (p as any).clearPersonaCache();
-      } catch {}
+      try { p.clearPersonaCache(); } catch {}
     }
 
     // Handle avatar data (base64 image upload)
@@ -127,39 +111,42 @@ router.put("/:name", async (req, res) => {
 
     // Update avatar URL in channels.json
     if (finalAvatarUrl !== undefined) {
-      const channels = await loadChannels();
+      const cr = await channelLoader();
+      const channels = await cr.loadChannels();
       if (!channels.personas) channels.personas = {};
       if (!channels.personas[name]) {
         channels.personas[name] = {
           channelId: null,
-          displayName: await getPersonaTitle(name),
+          displayName: await p.getPersonaTitle(name),
           avatarUrl: "",
           enabled: false,
         };
       }
       channels.personas[name].avatarUrl = finalAvatarUrl;
-      await saveChannels(channels);
+      await cr.saveChannels(channels);
       updated = true;
     }
 
     res.json({ ok: true, updated });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: message });
   }
 });
 
 // POST /api/personas/rename
 router.post("/rename", async (req, res) => {
   try {
-    if (!renamePersona) await load();
+    const c = await commandsLoader();
     const { from, to } = req.body as { from?: string; to?: string };
     if (!from || !to) {
       return res.status(400).json({ error: "from 和 to 是必填项。" });
     }
-    const result = await renamePersona(from, to);
+    const result = await c.renamePersona(from, to);
     res.json({ ok: true, message: result });
-  } catch (err: any) {
-    res.status(400).json({ error: err.message });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(400).json({ error: message });
   }
 });
 

@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { createLoader } from "../lazyLoad.js";
 
 const router = Router();
 
@@ -6,12 +7,7 @@ const CLIENT_ID = process.env.DISCORD_CLIENT_ID ?? "";
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET ?? "";
 const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI ?? "http://localhost:3457/auth/callback";
 
-// Import elias auth to check master ID
-let getMasterId: () => Promise<string>;
-async function loadEliasAuth() {
-  const mod = await import("../../../eliasCore/src/helpers/auth.js");
-  getMasterId = mod.getMasterId;
-}
+const authLoader = createLoader(() => import("../../../eliasCore/src/helpers/auth.js"));
 
 // --- GET /auth/login --- redirect to Discord OAuth ---
 router.get("/login", (_req, res) => {
@@ -77,8 +73,8 @@ router.get("/callback", async (req, res) => {
     };
 
     // Verify this user is the master
-    if (!getMasterId) await loadEliasAuth();
-    const masterId = await getMasterId();
+    const auth = await authLoader();
+    const masterId = await auth.getMasterId();
     if (masterId && user.id !== masterId) {
       return res.status(403).send("你不是我的 Master。");
     }

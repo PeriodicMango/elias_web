@@ -1,73 +1,18 @@
 import { Router } from "express";
+import { parseMoodTag } from "../../../eliasCore/src/helpers/moodParser.js";
+import { createLoader } from "../lazyLoad.js";
+import type { ChatMessage } from "../../../eliasCore/src/llm.js";
 
 const router = Router();
 
-// Lazy-loaded elias imports
-let chatDualPipeline: Function;
-let chat: Function;
-let loadSoul: Function;
-let assemblePrompt: Function;
-let loadUserProfile: Function;
-let loadDynamicRules: Function;
-let loadPersonaNotebook: Function;
-let getRecentMemory: Function;
-let getSemanticKnowledge: Function;
-let getUserContext: Function;
-let appendDailyLogRaw: Function;
-let getHistory: Function;
-let pushHistoryMessage: Function;
-let appendHistory: Function;
-let personaPath: Function;
-let getCurrentStatus: Function;
-let getStatusPrompt: Function;
-let onUserMessage: Function;
-let getAllToolDefinitions: Function;
-let timeString: Function;
-let todayString: Function;
-
-async function loadModules() {
-  const llm = await import("../../../eliasCore/src/llm.js");
-  chatDualPipeline = llm.chatDualPipeline;
-  chat = llm.chat;
-
-  const prompt = await import("../../../eliasCore/src/prompt.js");
-  loadSoul = prompt.loadSoul;
-  assemblePrompt = prompt.assemblePrompt;
-  loadUserProfile = prompt.loadUserProfile;
-  loadDynamicRules = prompt.loadDynamicRules;
-  loadPersonaNotebook = prompt.loadPersonaNotebook;
-
-  const memory = await import("../../../eliasCore/src/memory.js");
-  getRecentMemory = memory.getRecentMemory;
-  getSemanticKnowledge = memory.getSemanticKnowledge;
-  getUserContext = memory.getUserContext;
-  appendDailyLogRaw = memory.appendDailyLogRaw;
-  timeString = memory.timeString;
-  todayString = memory.todayString;
-
-  const historyMod = await import("../../../eliasCore/src/helpers/history.js");
-  getHistory = historyMod.getHistory;
-  pushHistoryMessage = historyMod.pushHistoryMessage;
-  appendHistory = historyMod.appendHistory;
-
-  const config = await import("../../../eliasCore/src/config.js");
-  personaPath = config.personaPath;
-
-  const statusMod = await import("../../../eliasCore/src/helpers/status.js");
-  getCurrentStatus = statusMod.getCurrentStatus;
-  getStatusPrompt = statusMod.getStatusPrompt;
-  onUserMessage = statusMod.onUserMessage;
-
-  const tools = await import("../../../eliasCore/src/helpers/tools/index.js");
-  getAllToolDefinitions = tools.getAllToolDefinitions;
-}
-
-// Parse [mood: xxx] tag from response text
-function parseMoodTag(text: string): { mood: string; text: string } {
-  const match = text.match(/\[心情[:：]\s*([^\]]+)\]/);
-  if (!match) return { mood: "平静", text };
-  return { mood: match[1]!, text: text.replace(match[0]!, "").trim() };
-}
+// Module loaders — each module is lazy-loaded once, cached thereafter
+const llmLoader = createLoader(() => import("../../../eliasCore/src/llm.js"));
+const promptLoader = createLoader(() => import("../../../eliasCore/src/prompt.js"));
+const memoryLoader = createLoader(() => import("../../../eliasCore/src/memory.js"));
+const historyLoader = createLoader(() => import("../../../eliasCore/src/helpers/history.js"));
+const configLoader = createLoader(() => import("../../../eliasCore/src/config.js"));
+const statusLoader = createLoader(() => import("../../../eliasCore/src/helpers/status.js"));
+const toolsLoader = createLoader(() => import("../../../eliasCore/src/helpers/tools/index.js"));
 
 // POST /api/chat
 router.post("/", async (req, res) => {
@@ -83,11 +28,22 @@ router.post("/", async (req, res) => {
     }
 
     const p = persona?.trim() || "elias";
-    if (!chatDualPipeline) await loadModules();
+
+    // Load all modules in parallel (cached after first call)
+    const [llm, prompt, memory, historyMod, config, statusMod, tools] =
+      await Promise.all([
+        llmLoader(),
+        promptLoader(),
+        memoryLoader(),
+        historyLoader(),
+        configLoader(),
+        statusLoader(),
+        toolsLoader(),
+      ]);
 
     // 1. Load persona identity
     const [soul, title] = await Promise.all([
-      loadSoul(p),
+      prompt.loadSoul(p),
       import("../../../eliasCore/src/helpers/personas.js").then((m) =>
         m.getPersonaTitle(p),
       ),
@@ -102,19 +58,19 @@ router.post("/", async (req, res) => {
 
     const [thinkingPrompt, replyPrompt, userProfile, dynamicRules, notebook] =
       await Promise.all([
-        assemblePrompt({ ...ctxBase, mode: "chat-thinking" }),
-        assemblePrompt({ ...ctxBase, mode: "chat-reply" }),
-        loadUserProfile(),
-        loadDynamicRules(),
-        loadPersonaNotebook(p),
+        prompt.assemblePrompt({ ...ctxBase, mode: "chat-thinking" }),
+        prompt.assemblePrompt({ ...ctxBase, mode: "chat-reply" }),
+        prompt.loadUserProfile(),
+        prompt.loadDynamicRules(),
+        prompt.loadPersonaNotebook(p),
       ]);
 
     // 3. Load context
     const [recentMem, semKb, userCtx, statusPrompt] = await Promise.all([
-      getRecentMemory(p),
-      getSemanticKnowledge(message),
-      getUserContext(message),
-      getStatusPrompt(p),
+      memory.getRecentMemory(p),
+      memory.getSemanticKnowledge(message),
+      memory.getUserContext(message),
+      statusMod.getStatusPrompt(p),
     ]);
 
     const now = new Date();
@@ -152,25 +108,25 @@ router.post("/", async (req, res) => {
       .join("\n\n");
 
     // 5. History
-    const historyPath = personaPath(p, "history", "web-dm.md");
-    const history = await getHistory(historyPath);
-    history.push({ role: "user", content: message });
+    const historyPath = config.personaPath(p, "history", "web-dm.md");
+    const history = await historyMod.getHistory(historyPath);
+    history.push({ role: "user", content: message } as ChatMessage);
 
     // 6. Status wake-up
-    const wakeUp = await onUserMessage("master", p);
+    const wakeUp = await statusMod.onUserMessage("master", p);
 
     // 7. LLM call
-    const tools = getAllToolDefinitions();
-    const result: any = fastMode
-      ? await chat(
+    const toolDefs = tools.getAllToolDefinitions();
+    const result = fastMode
+      ? await llm.chat(
           [
             { role: "system", content: replySystem },
             ...history,
           ],
-          { tools, senderLevel: "master" },
+          { tools: toolDefs, senderLevel: "master" },
         )
-      : await chatDualPipeline(history, thinkingSystem, replySystem, {
-          tools,
+      : await llm.chatDualPipeline(history, thinkingSystem, replySystem, {
+          tools: toolDefs,
           senderLevel: "master",
         });
 
@@ -187,12 +143,12 @@ router.post("/", async (req, res) => {
 
     // 9. Persist
     const ts = now.toLocaleString("zh-CN", { timeZone: "Australia/Sydney" });
-    const date = todayString();
-    pushHistoryMessage(historyPath, { role: "assistant", content: sanitized });
-    appendHistory(historyPath, `[${ts}] Web User: ${message}`);
-    appendHistory(historyPath, `[${ts}] ${title}: ${sanitized}`);
-    appendDailyLogRaw(
-      `[${timeString()}] Web User: ${message}\n[${timeString()}] ${title}: ${sanitized}\n`,
+    const date = memory.todayString();
+    historyMod.pushHistoryMessage(historyPath, { role: "assistant", content: sanitized });
+    historyMod.appendHistory(historyPath, `[${ts}] Web User: ${message}`);
+    historyMod.appendHistory(historyPath, `[${ts}] ${title}: ${sanitized}`);
+    memory.appendDailyLogRaw(
+      `[${memory.timeString()}] Web User: ${message}\n[${memory.timeString()}] ${title}: ${sanitized}\n`,
       p,
     );
 
@@ -203,30 +159,25 @@ router.post("/", async (req, res) => {
       toolsUsed,
       mood,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[CHAT] Error:", err);
-    res.status(500).json({
-      error: "对话出错。",
-      detail: err.message,
-    });
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: "对话出错。", detail: message });
   }
 });
 
 // POST /api/chat/clear
 router.post("/clear", async (_req, res) => {
   try {
-    if (!personaPath) await loadModules();
-    // We need to import clearHistory
-    const { clearHistory } = await import(
-      "../../../eliasCore/src/helpers/history.js"
-    );
-    // Get current persona from request or default
-    const persona = "elias"; // Default — web only has one user context
-    const historyPath = personaPath(persona, "history", "web-dm.md");
-    await clearHistory(historyPath);
+    const config = await configLoader();
+    const hist = await historyLoader();
+    const persona = "elias";
+    const historyPath = config.personaPath(persona, "history", "web-dm.md");
+    await hist.clearHistory(historyPath);
     res.json({ ok: true });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: message });
   }
 });
 

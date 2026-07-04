@@ -1,24 +1,15 @@
 import { Router } from "express";
+import { createLoader } from "../lazyLoad.js";
 
 const router = Router();
 
-let getModel: Function;
-let getApiUrl: Function;
-let getApiKey: Function;
-let readDataJson: Function;
-
-async function load() {
-  const c = await import("../../../eliasCore/src/config.js");
-  getModel = c.getModel;
-  getApiUrl = c.getApiUrl;
-  getApiKey = c.getApiKey;
-  const a = await import("../../../eliasCore/src/helpers/auth.js");
-  readDataJson = a.readDataJson;
-}
+const configLoader = createLoader(() => import("../../../eliasCore/src/config.js"));
 
 router.get("/", async (_req, res) => {
-  if (!getModel) await load();
-  const [model, apiUrl, apiKey] = await Promise.all([getModel(), getApiUrl(), getApiKey()]);
+  const config = await configLoader();
+  const [model, apiUrl, apiKey] = await Promise.all([
+    config.getModel(), config.getApiUrl(), config.getApiKey(),
+  ]);
   res.json({
     model,
     apiUrl,
@@ -27,15 +18,15 @@ router.get("/", async (_req, res) => {
 });
 
 router.put("/", async (req, res) => {
-  if (!readDataJson) await load();
+  const config = await configLoader();
   const { model, url, key } = req.body as { model?: string; url?: string; key?: string };
-  const data = await readDataJson();
+  const data = await config.readDataJson();
   if (model !== undefined) data.deepseekModel = model;
   if (url !== undefined) data.deepseekUrl = url;
   if (key !== undefined) data.deepseekKey = key;
   const fs = await import("node:fs/promises");
   const path = await import("node:path");
-  const { PATHS } = await import("../../../eliasCore/src/config.js");
+  const { PATHS } = await configLoader();
   await fs.writeFile(
     path.join(PATHS.base, "data.json"),
     JSON.stringify(data, null, 2),

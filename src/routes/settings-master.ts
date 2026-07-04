@@ -1,36 +1,32 @@
 import { Router } from "express";
+import { createLoader } from "../lazyLoad.js";
 
 const router = Router();
 
-let getMasterId: Function;
-let transferMaster: Function;
-
-async function load() {
-  const a = await import("../../../eliasCore/src/helpers/auth.js");
-  getMasterId = a.getMasterId;
-  transferMaster = a.transferMaster;
-}
+const authLoader = createLoader(() => import("../../../eliasCore/src/helpers/auth.js"));
 
 router.get("/", async (_req, res) => {
   try {
-    if (!getMasterId) await load();
-    const id = await getMasterId();
+    const auth = await authLoader();
+    const id = await auth.getMasterId();
     res.json({ masterId: id || "未设置" });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: message });
   }
 });
 
 router.post("/transfer", async (req, res) => {
   try {
-    if (!transferMaster) await load();
+    const auth = await authLoader();
     const { newId } = req.body as { newId?: string };
     if (!newId) return res.status(400).json({ error: "newId 是必填项（17-20位Discord用户ID）。" });
-    const result = await transferMaster(newId);
+    const result = await auth.transferMaster(newId);
     if (!result.ok) return res.status(400).json({ error: result.error });
     res.json({ ok: true, message: `Master 已转让至 ${newId}` });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: message });
   }
 });
 

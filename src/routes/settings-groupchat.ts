@@ -1,61 +1,53 @@
 import { Router } from "express";
+import { createLoader } from "../lazyLoad.js";
 
 const router = Router();
 
-let loadChannels: Function;
-let saveChannels: Function;
-let listPersonas: Function;
-
-async function load() {
-  const cr = await import("../../../eliasCore/src/helpers/channelRegistry.js");
-  loadChannels = cr.loadChannels;
-  saveChannels = cr.saveChannels;
-  const p = await import("../../../eliasCore/src/helpers/personas.js");
-  listPersonas = p.listPersonas;
-}
+const channelLoader = createLoader(() => import("../../../eliasCore/src/helpers/channelRegistry.js"));
+const personasLoader = createLoader(() => import("../../../eliasCore/src/helpers/personas.js"));
 
 router.get("/", async (_req, res) => {
   try {
-    if (!loadChannels) await load();
-    const [channels, names] = await Promise.all([loadChannels(), listPersonas()]);
+    const cr = await channelLoader();
+    const p = await personasLoader();
+    const [channels, names] = await Promise.all([cr.loadChannels(), p.listPersonas()]);
     const gcPersonas: string[] = channels?.groupChat?.personas ?? [];
     const personas = await Promise.all(
-      (names as string[]).map(async (name: string) => {
-        const { getPersonaTitle } = await import("../../../eliasCore/src/helpers/personas.js");
-        return {
-          name,
-          displayName: await getPersonaTitle(name),
-          inGroupChat: gcPersonas.includes(name),
-        };
-      }),
+      names.map(async (name: string) => ({
+        name,
+        displayName: await p.getPersonaTitle(name),
+        inGroupChat: gcPersonas.includes(name),
+      })),
     );
     res.json({
       enabled: channels?.groupChat?.enabled ?? false,
       channelId: channels?.groupChat?.channelId ?? null,
       personas,
     });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: message });
   }
 });
 
 router.put("/:persona", async (req, res) => {
   try {
-    if (!loadChannels) await load();
+    const cr = await channelLoader();
     const { persona } = req.params;
     const { enabled } = req.body as { enabled?: boolean };
     if (enabled === undefined) return res.status(400).json({ error: "enabled 是必填项。" });
 
-    const channels = await loadChannels();
+    const channels = await cr.loadChannels();
     const gc = channels.groupChat ?? {};
     let list: string[] = gc.personas ?? [];
     if (enabled && !list.includes(persona!)) list.push(persona!);
     if (!enabled) list = list.filter((n: string) => n !== persona);
     channels.groupChat = { ...gc, personas: list };
-    await saveChannels(channels);
+    await cr.saveChannels(channels);
     res.json({ ok: true });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: message });
   }
 });
 

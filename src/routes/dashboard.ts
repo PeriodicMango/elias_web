@@ -1,31 +1,29 @@
 import { Router } from "express";
+import { createLoader } from "../lazyLoad.js";
 
 const router = Router();
 
-let getModel: Function;
-let getApiUrl: Function;
-let getMasterId: Function;
-let listPersonas: Function;
-
-async function load() {
-  const c = await import("../../../eliasCore/src/config.js");
-  getModel = c.getModel;
-  getApiUrl = c.getApiUrl;
-  const a = await import("../../../eliasCore/src/helpers/auth.js");
-  getMasterId = a.getMasterId;
-  const p = await import("../../../eliasCore/src/helpers/personas.js");
-  listPersonas = p.listPersonas;
-}
+const configLoader = createLoader(() => import("../../../eliasCore/src/config.js"));
+const authLoader = createLoader(() => import("../../../eliasCore/src/helpers/auth.js"));
+const personasLoader = createLoader(() => import("../../../eliasCore/src/helpers/personas.js"));
 
 router.get("/", async (_req, res) => {
   try {
-    if (!getModel) await load();
-    const [model, apiUrl, masterId, personas] = await Promise.all([
-      getModel(), getApiUrl(), getMasterId(), listPersonas(),
+    const [config, auth, personas] = await Promise.all([
+      configLoader(),
+      authLoader(),
+      personasLoader(),
+    ]);
+
+    const [model, apiUrl, masterId, personaList] = await Promise.all([
+      config.getModel(),
+      config.getApiUrl(),
+      auth.getMasterId(),
+      personas.listPersonas(),
     ]);
 
     const fs = await import("node:fs/promises");
-    const { PATHS } = await import("../../../eliasCore/src/config.js");
+    const { PATHS } = await configLoader();
 
     let kbOk = false, eliasDataOk = false;
     try { await fs.access(PATHS.knowledgeBase); kbOk = true; } catch {}
@@ -36,12 +34,13 @@ router.get("/", async (_req, res) => {
       uptime: process.uptime(),
       memory: { heapMB: Math.round(mem.heapUsed / 1024 / 1024), rssMB: Math.round(mem.rss / 1024 / 1024) },
       model, apiUrl,
-      masterId: masterId ? `${(masterId as string).slice(0, 4)}****` : "未设置",
-      personas: (personas as string[]).length,
+      masterId: masterId ? `${masterId.slice(0, 4)}****` : "未设置",
+      personas: personaList.length,
       kbOk, eliasDataOk,
     });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: message });
   }
 });
 
