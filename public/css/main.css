@@ -131,10 +131,7 @@ a:hover { opacity: 0.8; }
   border-right: 1px solid var(--border);
   transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.sidebar.collapsed {
-  width: 64px;
-  overflow: hidden;
-}
+.sidebar.collapsed { width: 64px; }
 
 /* Collapsed: hide all text elements */
 .sidebar.collapsed .sidebar-logo-text,
