@@ -126,9 +126,11 @@ a:hover { opacity: 0.8; }
   -webkit-backdrop-filter: var(--glass-blur);
   color: var(--text-sidebar);
   display: flex; flex-direction: column;
-  position: fixed; top: 0; left: 0; bottom: 0;
+  position: fixed; top: 16px; left: 16px; bottom: 16px;
   z-index: 100; overflow: visible;
-  border-right: 1px solid var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 24px rgba(45,48,72,0.06), 0 0 0 1px rgba(91,154,255,0.04);
   transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .sidebar.collapsed { width: 64px; }
@@ -233,10 +235,10 @@ a:hover { opacity: 0.8; }
 
 /* --- Main content --- */
 .main-content {
-  margin-left: 260px; flex: 1; padding: var(--space-xl);
+  margin-left: 292px; flex: 1; padding: var(--space-xl);
   transition: margin-left 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.sidebar.collapsed ~ .main-content { margin-left: 64px; }
+.sidebar.collapsed ~ .main-content { margin-left: 96px; }
 
 /* --- Cards — fluffy glass --- */
 .card {
