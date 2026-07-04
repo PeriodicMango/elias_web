@@ -23,6 +23,7 @@ import { settingsMasterRouter } from "./routes/settings-master.js";
 import { vaultRouter } from "./routes/vault.js";
 import { goalsRouter } from "./routes/goals.js";
 import { activityRouter } from "./routes/activity.js";
+import { homeRouter } from "./routes/home.js";
 import { requireSession } from "./middleware/auth.js";
 
 const PORT = Number(process.env.WEB_PORT) || 3457;
@@ -66,6 +67,7 @@ app.use("/api/settings/master", requireSession, settingsMasterRouter);
 app.use("/api/vault", requireSession, vaultRouter);
 app.use("/api/goals", requireSession, goalsRouter);
 app.use("/api/activity", requireSession, activityRouter);
+app.use("/api/home", requireSession, homeRouter);
 
 // --- Static frontend ---
 app.use(express.static(path.resolve(__dirname, "..", "public")));

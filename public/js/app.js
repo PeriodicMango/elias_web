@@ -51,7 +51,7 @@ async function showApp() {
   await loadPersonas();
   renderSidebar();
   loadTheme();
-  switchTab("chat");
+  switchTab("home");
 }
 async function loadPersonas() {
   try {
@@ -75,6 +75,7 @@ function renderSidebar() {
   const nav = document.getElementById("sidebar-nav");
   nav.innerHTML = "";
   const tabs = [
+    { id: "home", icon: "\u{1F3E0}", label: "Home" },
     { id: "chat", icon: "\u{1F4AC}", label: "Chat" },
     { id: "personas", icon: "\u{1F465}", label: "Personas" },
     { id: "kb", icon: "\u{1F9E0}", label: "Knowledge Base" },
@@ -111,6 +112,9 @@ async function switchTab(tabId) {
   main.innerHTML = '<div class="spinner"></div>';
   try {
     switch (tabId) {
+      case "home":
+        await renderHomeTab();
+        break;
       case "chat":
         await renderChat();
         break;
@@ -134,8 +138,10 @@ async function switchTab(tabId) {
     main.innerHTML = `<div class="card"><div class="card-body">\u52A0\u8F7D\u5931\u8D25: ${e.message}</div></div>`;
   }
   document.querySelectorAll(".nav-item").forEach((el) => {
-    const id = el.textContent?.trim().toLowerCase().replace(/[^a-z]/g, "") ?? "";
-    el.classList.toggle("active", id === tabId || tabId === "kb" && id.includes("knowledge"));
+    const text = el.textContent?.trim().toLowerCase() ?? "";
+    const navIds = { home: ["home"], chat: ["chat"], personas: ["personas"], kb: ["knowledgebase"], goals: ["goals"], settings: ["settings"], style: ["style"] };
+    const matches = navIds[tabId] || [tabId];
+    el.classList.toggle("active", matches.some(m => text.includes(m)));
   });
 }
 async function renderChat() {
@@ -221,6 +227,14 @@ async function renderChat() {
   });
   btn.addEventListener("click", send);
   msgContainer = msgs;
+
+  // Check for pending message from homepage chatbox
+  const pending = sessionStorage.getItem("elias-pending-message");
+  if (pending) {
+    sessionStorage.removeItem("elias-pending-message");
+    input.value = pending;
+    send();
+  }
   // Restore messages from state
   for (const m of state.chatMessages) {
     const restored = addMsg(m.role, m.content, false);
@@ -252,6 +266,17 @@ function addMsg(role, content, loading = false) {
   state.chatMessages.push({ role, content, loading, el: null });
   return el;
 }
+// --- Home Tab ---
+async function renderHomeTab() {
+  const { renderHome } = await import("/js/home.js");
+  await renderHome(state.activePersona);
+
+  // Listen for chatbox submit → switch to chat tab
+  window.addEventListener("elias-home-chat", () => {
+    switchTab("chat");
+  });
+}
+
 // --- Personas Tab ---
 async function renderPersonasTab() {
   const main = document.getElementById("main-content");
