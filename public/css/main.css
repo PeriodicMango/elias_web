@@ -144,8 +144,7 @@ a:hover { opacity: 0.8; }
 .sidebar.collapsed .btn-logout { display: none; }
 
 /* Collapsed: center icons */
-.sidebar.collapsed .sidebar-logo { justify-content: center; flex-wrap: wrap; gap: 6px; padding: var(--space-sm); cursor: pointer; }
-.sidebar.collapsed .sidebar-logo-icon { font-size: 1.3em; }
+.sidebar.collapsed .sidebar-logo { justify-content: center; padding: var(--space-sm); cursor: pointer; }
 .sidebar.collapsed .sidebar-toggle { width: 24px; height: 24px; font-size: 8px; box-shadow: none; transform: rotate(180deg); }
 .sidebar.collapsed .nav-item { justify-content: center; }
 .sidebar.collapsed .nav-icon { font-size: 1.35em; width: auto; }
@@ -155,11 +154,10 @@ a:hover { opacity: 0.8; }
 .sidebar-logo {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: var(--space-lg);
+  justify-content: flex-end;
+  padding: var(--space-md) var(--space-lg);
   border-bottom: 1px solid var(--border);
 }
-.sidebar-logo-icon { font-size: var(--fs-lg); }
 
 /* Sidebar toggle — in the logo bar */
 .sidebar-toggle {
