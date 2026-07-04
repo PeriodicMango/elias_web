@@ -131,7 +131,13 @@ a:hover { opacity: 0.8; }
   border-right: 1px solid var(--border);
   transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.sidebar.collapsed { width: 64px; overflow: hidden; }
+.sidebar.collapsed {
+  width: 64px;
+  overflow: hidden;
+  /* Nuclear option: collapse all text to 0, restore only icons */
+  font-size: 0;
+}
+.sidebar.collapsed > * { font-size: 0; }
 
 /* Sidebar toggle */
 .sidebar-toggle {
@@ -159,25 +165,18 @@ a:hover { opacity: 0.8; }
 }
 .sidebar-logo-icon { display: inline; }
 .sidebar.collapsed .sidebar-logo { text-align: center; padding: var(--space-md) var(--space-xs); }
-.sidebar.collapsed .sidebar-logo-icon { font-size: 1.4em; }
-.sidebar.collapsed .sidebar-logo-text { display: none; }
+.sidebar.collapsed .sidebar-logo-icon { font-size: 1.4rem !important; }
 
 /* Nav items — collapsed: icon only */
 .nav-item { white-space: nowrap; }
 .sidebar.collapsed .nav-item { justify-content: center; padding: 10px 0; }
-.sidebar.collapsed .nav-item span { display: none; }
-.sidebar.collapsed .nav-item .nav-icon { display: inline; font-size: 1.35em; width: auto; }
+.sidebar.collapsed .nav-icon { font-size: 1.35rem !important; width: auto; }
 
-/* Collapsed: hide sections entirely */
-.sidebar.collapsed .sidebar-section-label,
-.sidebar.collapsed .persona-list { display: none; }
-
-/* Collapsed: user area — keep avatar, hide text */
+/* Collapsed: user area — keep avatar, kill all text */
 .sidebar.collapsed .sidebar-user {
   justify-content: center; padding: var(--space-md) 0;
 }
-.sidebar.collapsed #sidebar-username,
-.sidebar.collapsed .btn-logout { display: none; }
+.sidebar.collapsed .sidebar-avatar { width: 32px; height: 32px; }
 
 /* Nav */
 .sidebar-nav { flex: 1; padding: var(--space-sm) 0; }
