@@ -97,7 +97,7 @@ function renderSidebar() {
   for (const tab of tabs) {
     const item = document.createElement("div");
     item.className = `nav-item${state.activeTab === tab.id ? " active" : ""}`;
-    item.innerHTML = `<span class="nav-icon">${tab.icon}</span> ${tab.label}`;
+    item.innerHTML = `<span class="nav-icon">${tab.icon}</span> <span class="nav-label">${tab.label}</span>`;
     item.addEventListener("click", () => switchTab(tab.id));
     nav.appendChild(item);
   }
@@ -106,7 +106,7 @@ function renderSidebar() {
   for (const p of state.personas) {
     const item = document.createElement("div");
     item.className = `persona-item${p.name === state.activePersona ? " active" : ""}`;
-    item.innerHTML = `<span class="persona-dot"></span> ${p.displayName}`;
+    item.innerHTML = `<span class="persona-dot"></span> <span class="persona-label">${p.displayName}</span>`;
     item.addEventListener("click", () => {
       if (state.activePersona !== p.name) state.chatMessages = [];
       state.activePersona = p.name;

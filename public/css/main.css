@@ -135,48 +135,22 @@ a:hover { opacity: 0.8; }
   width: 64px;
   overflow: hidden;
 }
-/* Nuke all text in collapsed sidebar — override any child font-size */
-.sidebar.collapsed .sidebar-logo,
-.sidebar.collapsed .sidebar-nav,
-.sidebar.collapsed .nav-item,
+
+/* Collapsed: hide all text elements */
+.sidebar.collapsed .sidebar-logo-text,
+.sidebar.collapsed .nav-label,
+.sidebar.collapsed .persona-label,
 .sidebar.collapsed .sidebar-section-label,
 .sidebar.collapsed .persona-list,
-.sidebar.collapsed .persona-item,
-.sidebar.collapsed .sidebar-user,
-.sidebar.collapsed .sidebar-username,
-.sidebar.collapsed .btn-logout,
-.sidebar.collapsed .sidebar-logo-text {
-  font-size: 0 !important;
-  line-height: 0 !important;
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
-  margin: 0 !important;
-  border: none !important;
-  overflow: hidden;
-}
-/* Restore only the icons */
-.sidebar.collapsed .nav-icon,
-.sidebar.collapsed .sidebar-logo-icon {
-  font-size: 1.35rem !important;
-  line-height: 1.5 !important;
-  display: inline-block !important;
-  padding: 0 !important;
-  margin: 0 !important;
-}
-.sidebar.collapsed .nav-item {
-  display: flex !important;
-  justify-content: center !important;
-  height: 44px;
-}
-.sidebar.collapsed .sidebar-logo {
-  text-align: center !important;
-  padding: var(--space-md) var(--space-xs) !important;
-  height: auto;
-}
-.sidebar.collapsed .sidebar-user {
-  justify-content: center !important;
-  padding: var(--space-md) 0 !important;
-}
+.sidebar.collapsed #sidebar-username,
+.sidebar.collapsed .btn-logout { display: none; }
+
+/* Collapsed: center icons */
+.sidebar.collapsed .sidebar-logo { text-align: center; padding: var(--space-md) var(--space-xs); }
+.sidebar.collapsed .sidebar-logo-icon { font-size: 1.4em; }
+.sidebar.collapsed .nav-item { justify-content: center; }
+.sidebar.collapsed .nav-icon { font-size: 1.35em; width: auto; }
+.sidebar.collapsed .sidebar-user { justify-content: center; padding: var(--space-md) 0; }
 .sidebar.collapsed .sidebar-avatar { width: 32px; height: 32px; }
 
 /* Sidebar toggle */
