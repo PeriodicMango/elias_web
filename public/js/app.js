@@ -48,6 +48,17 @@ async function showApp() {
   document.getElementById("btn-logout").addEventListener("click", () => {
     window.location.href = "/auth/logout";
   });
+
+  // Sidebar toggle
+  const sidebar = document.getElementById("sidebar");
+  const toggleBtn = document.getElementById("sidebar-toggle");
+  const collapsed = localStorage.getItem("elias-sidebar-collapsed") === "true";
+  if (collapsed) sidebar.classList.add("collapsed");
+  toggleBtn.addEventListener("click", () => {
+    sidebar.classList.toggle("collapsed");
+    localStorage.setItem("elias-sidebar-collapsed", String(sidebar.classList.contains("collapsed")));
+  });
+
   await loadPersonas();
   renderSidebar();
   loadTheme();
