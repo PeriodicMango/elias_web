@@ -145,7 +145,7 @@ a:hover { opacity: 0.8; }
 
 /* Collapsed: center icons */
 .sidebar.collapsed .sidebar-logo { justify-content: center; padding: var(--space-sm); cursor: pointer; }
-.sidebar.collapsed .sidebar-toggle { width: 24px; height: 24px; font-size: 8px; box-shadow: none; transform: rotate(180deg); }
+.sidebar.collapsed .sidebar-toggle { transform: rotate(180deg); }
 .sidebar.collapsed .nav-item { justify-content: center; }
 .sidebar.collapsed .nav-icon { font-size: 1.35em; width: auto; }
 .sidebar.collapsed .sidebar-user { justify-content: center; padding: var(--space-md) 0; }

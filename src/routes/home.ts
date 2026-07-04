@@ -8,6 +8,7 @@ const greetingCache = new Map<string, string>();
 
 const promptLoader = createLoader(() => import("../../../../eliasCore/src/prompt.js"));
 const llmLoader = createLoader(() => import("../../../../eliasCore/src/llm.js"));
+const personasLoader = createLoader(() => import("../../../../eliasCore/src/helpers/personas.js"));
 
 // GET /api/home/greeting?persona=wanshi
 router.get("/greeting", async (req, res) => {
@@ -20,22 +21,32 @@ router.get("/greeting", async (req, res) => {
       return res.json({ greeting: cached });
     }
 
-    const [prompt, llm] = await Promise.all([promptLoader(), llmLoader()]);
+    const [prompt, llm, personas] = await Promise.all([
+      promptLoader(), llmLoader(), personasLoader(),
+    ]);
 
-    // Load persona soul for tone/manner
-    const soul = await prompt.loadSoul(persona);
+    // Assemble greeting prompt: persona soul + auth-level fragment only.
+    // Uses mode "greeting" which includes auth fragments but skips the
+    // full chat formatting rules, tools, and Phase 1/2 reasoning.
+    const title = await personas.getMasterTitle(persona);
+    const greetingSystem = await prompt.assemblePrompt({
+      persona,
+      senderLevel: "master",
+      mode: "greeting",
+      variables: { PERSONA_TITLE: title, MASTER_NAME: "漓琊" },
+    });
 
     // Generate a short greeting in the persona's voice
     const result = await llm.chat(
       [
-        { role: "system", content: soul },
+        { role: "system", content: greetingSystem },
         {
           role: "user",
           content:
             "现在是用户打开控制台看到的首页。请用你的语气说一句简短的问候语（一句话，不超过30个字）。不要问句，不要说'需要帮忙吗'之类的话——只是打个招呼。不要用emoji。像刚注意到用户来了，随口说的一句话。中文。",
         },
       ],
-      { maxTokens: 60 },
+      {},
     );
 
     const greeting = result.text.trim() || "嗯，来了。";

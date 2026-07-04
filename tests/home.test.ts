@@ -187,7 +187,8 @@ describe("greeting API contract", () => {
     );
     expect(routeSrc).toContain('res.json({ greeting');
     expect(routeSrc).toContain("greetingCache");
-    expect(routeSrc).toContain("loadSoul");
+    expect(routeSrc).toContain("assemblePrompt");
+    expect(routeSrc).toContain("getMasterTitle");
   });
 
   it("caches greetings per persona", () => {
