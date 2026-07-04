@@ -12,6 +12,6 @@
     "sourceMap": true,
     "baseUrl": "."
   },
-  "include": ["src/**/*.ts", "../elias/src/**/*.ts"],
+  "include": ["src/**/*.ts", "../../eliasCore/src/**/*.ts"],
   "exclude": ["node_modules", "dist", "public"]
 }
