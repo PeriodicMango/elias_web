@@ -204,3 +204,62 @@
   grid-column: 1 / -1; text-align: center;
   padding: var(--space-2xl); color: var(--text-tertiary); font-size: var(--fs-sm);
 }
+
+/* ============================================================
+   Mobile Responsive — max-width: 768px
+   ============================================================ */
+@media (max-width: 768px) {
+  .home-container {
+    max-width: 100%;
+    padding: var(--space-sm) var(--space-sm);
+    gap: var(--space-lg);
+  }
+
+  .home-greeting-wrapper {
+    padding: 24px 0 20px;
+  }
+
+  .home-greeting-glow {
+    width: 220px;
+    height: 100px;
+  }
+
+  .home-greeting-text {
+    font-size: 1.35rem;
+    max-width: 100%;
+    padding: 0 var(--space-sm);
+  }
+
+  .home-chatbox {
+    margin: 0 var(--space-xs);
+  }
+
+  .home-chatbox input {
+    font-size: 1rem;
+    padding: 10px 6px 10px 16px;
+  }
+
+  .home-chatbox button {
+    width: 42px;
+    height: 42px;
+    font-size: 1.1rem;
+  }
+
+  .widget-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: var(--space-sm);
+  }
+
+  .widget-card {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .widget-add-btn {
+    padding: 6px 14px;
+    font-size: 0.8rem;
+  }
+
+  .home-widgets-title {
+    font-size: var(--fs-base);
+  }
+}

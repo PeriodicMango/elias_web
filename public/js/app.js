@@ -52,17 +52,38 @@ async function showApp() {
   // Sidebar toggle
   const sidebar = document.getElementById("sidebar");
   const toggleBtn = document.getElementById("sidebar-toggle");
-  const collapsed = localStorage.getItem("elias-sidebar-collapsed") === "true";
+  const isMobile = window.innerWidth < 768;
+
+  // On mobile, sidebar starts collapsed (hidden as overlay)
+  const collapsed = isMobile ? true : localStorage.getItem("elias-sidebar-collapsed") === "true";
   if (collapsed) sidebar.classList.add("collapsed");
+
   const doToggle = () => {
     sidebar.classList.toggle("collapsed");
-    localStorage.setItem("elias-sidebar-collapsed", String(sidebar.classList.contains("collapsed")));
+    if (!isMobile) {
+      localStorage.setItem("elias-sidebar-collapsed", String(sidebar.classList.contains("collapsed")));
+    }
   };
   toggleBtn.addEventListener("click", doToggle);
   // Click logo area to expand when collapsed
   document.querySelector(".sidebar-logo").addEventListener("click", (e) => {
     if (sidebar.classList.contains("collapsed") && e.target !== toggleBtn) doToggle();
   });
+
+  // Mobile menu button
+  const mobileBtn = document.getElementById("mobile-menu-btn");
+  if (mobileBtn) {
+    mobileBtn.addEventListener("click", doToggle);
+  }
+
+  // Mobile backdrop — click to close sidebar
+  const backdrop = document.getElementById("sidebar-backdrop");
+  if (backdrop) {
+    backdrop.addEventListener("click", doToggle);
+  }
+
+  // Close sidebar on mobile when a nav item is clicked
+  // (patched into the global switchTab wrapper below)
 
   await loadPersonas();
   renderSidebar();
@@ -117,6 +138,10 @@ function renderSidebar() {
       state.activePersona = p.name;
       renderSidebar();
       if (state.activeTab === "chat") renderChat();
+      // On mobile, close sidebar after persona switch
+      if (window.innerWidth < 768) {
+        document.getElementById("sidebar").classList.add("collapsed");
+      }
     });
     list.appendChild(item);
   }
@@ -124,6 +149,14 @@ function renderSidebar() {
 async function switchTab(tabId) {
   state.activeTab = tabId;
   renderSidebar();
+
+  // On mobile, auto-close sidebar after switching tabs
+  if (window.innerWidth < 768) {
+    const sidebar = document.getElementById("sidebar");
+    if (!sidebar.classList.contains("collapsed")) {
+      sidebar.classList.add("collapsed");
+    }
+  }
   const main = document.getElementById("main-content");
   main.innerHTML = '<div class="spinner"></div>';
   try {
