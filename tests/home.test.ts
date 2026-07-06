@@ -30,7 +30,7 @@ describe("homepage files", () => {
   it("home.js exists and exports renderHome", () => {
     const js = fs.readFileSync(path.join(PUBLIC, "js", "home.js"), "utf8");
     expect(js).toContain("export async function renderHome");
-    expect(js).toContain("class WidgetManager");
+    expect(js).toContain("class HomepageWidgets");
     expect(js).toContain("function loadGreeting");
     expect(js).toContain("function initChatbox");
     expect(js).toContain("function renderWidgets");
@@ -82,8 +82,8 @@ afterEach(() => {
   store.clear();
 });
 
-// Replicate WidgetManager logic for unit testing
-function createWidgetManager() {
+// Replicate HomepageWidgets logic for unit testing
+function createHomepageWidgets() {
   const STORAGE_KEY = "elias-widgets";
 
   function load(): Array<{ id: string; type: string; title: string }> {
@@ -116,14 +116,14 @@ function createWidgetManager() {
   };
 }
 
-describe("WidgetManager", () => {
+describe("HomepageWidgets", () => {
   it("starts with empty widget list", () => {
-    const wm = createWidgetManager();
+    const wm = createHomepageWidgets();
     expect(wm.list()).toEqual([]);
   });
 
   it("adds a widget and returns an id", () => {
-    const wm = createWidgetManager();
+    const wm = createHomepageWidgets();
     const id = wm.add("clock", "时钟");
     expect(typeof id).toBe("string");
     expect(id).toMatch(/^widget-/);
@@ -133,18 +133,18 @@ describe("WidgetManager", () => {
   });
 
   it("persists widgets across Manager instances (localStorage)", () => {
-    const wm1 = createWidgetManager();
+    const wm1 = createHomepageWidgets();
     wm1.add("weather", "天气");
     wm1.add("goals", "目标");
 
-    const wm2 = createWidgetManager();
+    const wm2 = createHomepageWidgets();
     expect(wm2.list()).toHaveLength(2);
     expect(wm2.list()[0].type).toBe("weather");
     expect(wm2.list()[1].type).toBe("goals");
   });
 
   it("removes a widget by id", () => {
-    const wm = createWidgetManager();
+    const wm = createHomepageWidgets();
     const id1 = wm.add("clock", "时钟");
     const id2 = wm.add("weather", "天气");
     expect(wm.list()).toHaveLength(2);
@@ -155,14 +155,14 @@ describe("WidgetManager", () => {
   });
 
   it("remove non-existent id is a no-op", () => {
-    const wm = createWidgetManager();
+    const wm = createHomepageWidgets();
     wm.add("clock", "时钟");
     wm.remove("nonexistent");
     expect(wm.list()).toHaveLength(1);
   });
 
   it("handles multiple widgets of same type", () => {
-    const wm = createWidgetManager();
+    const wm = createHomepageWidgets();
     wm.add("clock", "时钟A");
     wm.add("clock", "时钟B");
     expect(wm.list()).toHaveLength(2);
@@ -172,7 +172,7 @@ describe("WidgetManager", () => {
 
   it("handles corrupted localStorage gracefully", () => {
     localStorage.setItem("elias-widgets", "not-json{{{");
-    const wm = createWidgetManager();
+    const wm = createHomepageWidgets();
     expect(wm.list()).toEqual([]);
   });
 });
