@@ -53,6 +53,7 @@ app.use(
         fontSrc: ["'self'"],
         objectSrc: ["'none'"],
         frameSrc: ["'none'"],
+        upgradeInsecureRequests: null, // DISABLE — this is an HTTP server
       },
     },
     strictTransportSecurity: false,
