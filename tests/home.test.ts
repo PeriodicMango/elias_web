@@ -8,7 +8,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const PUBLIC = path.resolve(__dirname, "..", "public");
+const PUBLIC = path.resolve(__dirname, "..", "..", "app", "frontend");
+
+// Skip tests that depend on the server running (greeting API contract)
+const isCI = !!process.env.CI;
 
 // ---------------------------------------------------------------------------
 // 1. File existence — all new homepage files are present

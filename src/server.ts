@@ -38,6 +38,16 @@ const app = express();
 // Body parsing
 app.use(express.json());
 
+// CORS — allow cross-origin API access (Capacitor app, PWA, etc.)
+app.use("/api", (_req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  if (_req.method === "OPTIONS") return res.sendStatus(204);
+  next();
+});
+
 // Session
 app.use(
   session({
@@ -70,11 +80,11 @@ app.use("/api/activity", requireSession, activityRouter);
 app.use("/api/home", requireSession, homeRouter);
 
 // --- Static frontend ---
-app.use(express.static(path.resolve(__dirname, "..", "public")));
+app.use(express.static(path.resolve(__dirname, "..", "..", "app", "frontend")));
 
 // --- SPA fallback — serve index.html for any non-API route ---
 app.get("*", (_req, res) => {
-  res.sendFile(path.resolve(__dirname, "..", "public", "index.html"));
+  res.sendFile(path.resolve(__dirname, "..", "..", "app", "frontend", "index.html"));
 });
 
 // --- Start ---
