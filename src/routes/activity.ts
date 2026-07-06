@@ -16,8 +16,8 @@ router.get("/", async (req, res) => {
     const result = await app.execute("get_activity", { date });
     res.json({ date, content: result.content });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: message });
+    console.error("[ROUTE] Error:", err);
+    res.status(500).json({ error: "操作失败，请稍后重试" });
   }
 });
 
@@ -29,8 +29,8 @@ router.get("/addresses", async (_req, res) => {
     const result = await app.execute("list_addresses", {});
     res.json({ content: result.content });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: message });
+    console.error("[ROUTE] Error:", err);
+    res.status(500).json({ error: "操作失败，请稍后重试" });
   }
 });
 

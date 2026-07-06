@@ -37,8 +37,8 @@ router.get("/", async (_req, res) => {
     });
     res.json({ goals, raw: content });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: message });
+    console.error("[ROUTE] Error:", err);
+    res.status(500).json({ error: "操作失败，请稍后重试" });
   }
 });
 
@@ -53,8 +53,8 @@ router.post("/", validate(goalsAddSchema), async (req, res) => {
     }
     res.status(400).json({ error: "未知操作。" });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: message });
+    console.error("[ROUTE] Error:", err);
+    res.status(500).json({ error: "操作失败，请稍后重试" });
   }
 });
 
@@ -69,8 +69,8 @@ router.put("/:id", validate(goalsDoneSchema), async (req, res) => {
     }
     res.status(400).json({ error: "未知操作。" });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: message });
+    console.error("[ROUTE] Error:", err);
+    res.status(500).json({ error: "操作失败，请稍后重试" });
   }
 });
 

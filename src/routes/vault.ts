@@ -65,8 +65,8 @@ router.get("/tree", async (_req, res) => {
       ],
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: message });
+    console.error("[ROUTE] Error:", err);
+    res.status(500).json({ error: "操作失败，请稍后重试" });
   }
 });
 
@@ -85,8 +85,8 @@ router.get("/read", async (req, res) => {
     const content = await fs.readFile(fullPath, "utf8");
     res.json({ path: filePath, source, content });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    res.status(404).json({ error: message });
+    console.error("[ROUTE] Error:", err);
+    res.status(404).json({ error: "操作失败，请稍后重试" });
   }
 });
 
@@ -102,8 +102,8 @@ router.post("/write", validate(vaultWriteSchema), async (req, res) => {
     await fs.writeFile(fullPath, content, "utf8");
     res.json({ ok: true, path: filePath });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: message });
+    console.error("[ROUTE] Error:", err);
+    res.status(500).json({ error: "操作失败，请稍后重试" });
   }
 });
 
@@ -118,8 +118,8 @@ router.delete("/delete", validate(vaultDeleteSchema), async (req, res) => {
     await fs.unlink(fullPath);
     res.json({ ok: true });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: message });
+    console.error("[ROUTE] Error:", err);
+    res.status(500).json({ error: "操作失败，请稍后重试" });
   }
 });
 
@@ -160,8 +160,8 @@ router.get("/search", async (req, res) => {
     await walk(vaultRoot, "vault");
     res.json({ results: results.slice(0, 20) });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: message });
+    console.error("[ROUTE] Error:", err);
+    res.status(500).json({ error: "操作失败，请稍后重试" });
   }
 });
 

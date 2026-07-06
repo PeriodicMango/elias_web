@@ -37,8 +37,8 @@ router.get("/", async (_req, res) => {
     );
     res.json({ personas });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: message });
+    console.error("[ROUTE] Error:", err);
+    res.status(500).json({ error: "操作失败，请稍后重试" });
   }
 });
 
@@ -71,8 +71,8 @@ router.get("/:name", async (req, res) => {
       fileContent,
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: message });
+    console.error("[ROUTE] Error:", err);
+    res.status(500).json({ error: "操作失败，请稍后重试" });
   }
 });
 
@@ -139,8 +139,8 @@ router.put("/:name", validate(personaUpdateSchema), async (req, res) => {
 
     res.json({ ok: true, updated });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: message });
+    console.error("[ROUTE] Error:", err);
+    res.status(500).json({ error: "操作失败，请稍后重试" });
   }
 });
 
@@ -152,8 +152,8 @@ router.post("/rename", validate(personaRenameSchema), async (req, res) => {
     const result = await c.renamePersona(from, to);
     res.json({ ok: true, message: result });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    res.status(400).json({ error: message });
+    console.error("[ROUTE] Error:", err);
+    res.status(400).json({ error: "操作失败，请稍后重试" });
   }
 });
 

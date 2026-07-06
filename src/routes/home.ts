@@ -54,8 +54,8 @@ router.get("/greeting", async (req, res) => {
 
     res.json({ greeting });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: message });
+    console.error("[ROUTE] Error:", err);
+    res.status(500).json({ error: "操作失败，请稍后重试" });
   }
 });
 

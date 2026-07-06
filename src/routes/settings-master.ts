@@ -17,8 +17,8 @@ router.get("/", async (_req, res) => {
     const id = await auth.getMasterId();
     res.json({ masterId: id || "未设置" });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: message });
+    console.error("[ROUTE] Error:", err);
+    res.status(500).json({ error: "操作失败，请稍后重试" });
   }
 });
 
@@ -30,8 +30,8 @@ router.post("/transfer", validate(masterTransferSchema), async (req, res) => {
     if (!result.ok) return res.status(400).json({ error: result.error });
     res.json({ ok: true, message: `Master 已转让至 ${newId}` });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: message });
+    console.error("[ROUTE] Error:", err);
+    res.status(500).json({ error: "操作失败，请稍后重试" });
   }
 });
 

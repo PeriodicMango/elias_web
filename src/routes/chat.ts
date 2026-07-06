@@ -36,8 +36,8 @@ router.get("/history", async (req, res) => {
       : null;
     res.json({ messages: messages.slice(-50), lastTimestamp, persona });
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: message });
+    console.error("[ROUTE] Error:", err);
+    res.status(500).json({ error: "操作失败，请稍后重试" });
   }
 });
 
@@ -180,8 +180,7 @@ router.post("/", validate(chatSchema), async (req, res) => {
     });
   } catch (err: unknown) {
     console.error("[CHAT] Error:", err);
-    const message = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: "对话出错。", detail: message });
+    res.status(500).json({ error: "对话出错。" });
   }
 });
 

@@ -44,8 +44,8 @@ router.get("/", async (_req, res) => {
 
     res.json({ paused, pausedUntil, personas });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: message });
+    console.error("[ROUTE] Error:", err);
+    res.status(500).json({ error: "操作失败，请稍后重试" });
   }
 });
 
@@ -70,8 +70,8 @@ router.post("/pause", validate(pauseSchema), async (req, res) => {
     await fs.writeFile(path.join(PATHS.base, "data.json"), JSON.stringify(data, null, 2), "utf8");
     res.json({ ok: true, pausedUntil: until });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: message });
+    console.error("[ROUTE] Error:", err);
+    res.status(500).json({ error: "操作失败，请稍后重试" });
   }
 });
 
@@ -86,8 +86,8 @@ router.post("/resume", async (_req, res) => {
     await fs.writeFile(path.join(PATHS.base, "data.json"), JSON.stringify(data, null, 2), "utf8");
     res.json({ ok: true });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: message });
+    console.error("[ROUTE] Error:", err);
+    res.status(500).json({ error: "操作失败，请稍后重试" });
   }
 });
 
@@ -99,8 +99,8 @@ router.put("/:persona", validate(personaToggleSchema), async (req, res) => {
     await proactive.setPersonaProactiveDisabled(persona!, !enabled);
     res.json({ ok: true });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: message });
+    console.error("[ROUTE] Error:", err);
+    res.status(500).json({ error: "操作失败，请稍后重试" });
   }
 });
 
