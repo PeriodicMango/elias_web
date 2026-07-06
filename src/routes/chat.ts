@@ -22,6 +22,25 @@ const configLoader = createLoader(() => import("../../../../eliasCore/src/config
 const statusLoader = createLoader(() => import("../../../../eliasCore/src/helpers/status.js"));
 const toolsLoader = createLoader(() => import("../../../../eliasCore/src/helpers/tools/index.js"));
 
+// GET /api/chat/history
+router.get("/history", async (req, res) => {
+  try {
+    const persona = (req.query.persona as string) || "elias";
+    const config = await configLoader();
+    const hist = await historyLoader();
+    const historyPath = config.personaPath(persona, "history", "dm.md");
+    const messages = await hist.getHistory(historyPath);
+    // Return last 50 messages with a timestamp marker
+    const lastTimestamp = messages.length > 0
+      ? new Date().toISOString() // approximate — file-based history doesn't have per-message timestamps in cache
+      : null;
+    res.json({ messages: messages.slice(-50), lastTimestamp, persona });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: message });
+  }
+});
+
 // POST /api/chat
 router.post("/", validate(chatSchema), async (req, res) => {
   try {
@@ -110,7 +129,7 @@ router.post("/", validate(chatSchema), async (req, res) => {
       .join("\n\n");
 
     // 5. History
-    const historyPath = config.personaPath(p, "history", "web-dm.md");
+    const historyPath = config.personaPath(p, "history", "dm.md");
     const history = await historyMod.getHistory(historyPath);
     history.push({ role: "user", content: message } as ChatMessage);
 
@@ -145,8 +164,8 @@ router.post("/", validate(chatSchema), async (req, res) => {
     const ts = now.toLocaleString("zh-CN", { timeZone: "Australia/Sydney" });
     const date = memory.todayString();
     historyMod.pushHistoryMessage(historyPath, { role: "assistant", content: sanitized });
-    historyMod.appendHistory(historyPath, `[${ts}] Web User: ${message}`);
-    historyMod.appendHistory(historyPath, `[${ts}] ${title}: ${sanitized}`);
+    historyMod.appendHistory(historyPath, `Web User: ${message}`);
+    historyMod.appendHistory(historyPath, `${title}: ${sanitized}`);
     memory.appendDailyLogRaw(
       `[${memory.timeString()}] Web User: ${message}\n[${memory.timeString()}] ${title}: ${sanitized}\n`,
       p,
@@ -168,17 +187,8 @@ router.post("/", validate(chatSchema), async (req, res) => {
 
 // POST /api/chat/clear
 router.post("/clear", async (_req, res) => {
-  try {
-    const config = await configLoader();
-    const hist = await historyLoader();
-    const persona = "elias";
-    const historyPath = config.personaPath(persona, "history", "web-dm.md");
-    await hist.clearHistory(historyPath);
-    res.json({ ok: true });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: message });
-  }
+  // Client-side only — shared dm.md should not be wiped from one platform
+  res.json({ ok: true });
 });
 
 export { router as chatRouter };

@@ -28,6 +28,7 @@ import { vaultRouter } from "./routes/vault.js";
 import { goalsRouter } from "./routes/goals.js";
 import { activityRouter } from "./routes/activity.js";
 import { homeRouter } from "./routes/home.js";
+import { notificationsRouter } from "./routes/notifications.js";
 import { requireSession } from "./middleware/auth.js";
 
 const PORT = Number(process.env.WEB_PORT) || 3457;
@@ -112,6 +113,7 @@ app.use("/api/vault", requireSession, vaultRouter);
 app.use("/api/goals", requireSession, goalsRouter);
 app.use("/api/activity", requireSession, activityRouter);
 app.use("/api/home", requireSession, homeRouter);
+app.use("/api/notifications", notificationsRouter);
 
 // --- Static frontend ---
 // Try Capacitor app frontend first (local dev), fall back to local public/ (cloud)
@@ -139,6 +141,26 @@ const indexFile = path.join(staticDir, "index.html");
 app.get("*", (_req, res) => {
   res.sendFile(indexFile);
 });
+
+// Wire proactive → push notifications
+(async () => {
+  try {
+    const proactive = await import(
+      "../../../../eliasCore/src/helpers/proactive.js" as string
+    );
+    const { sendPushNotification } = await import("./routes/notifications.js");
+    proactive.setPushNotifier(
+      async (persona: string, _displayName: string, message: string) => {
+        const body =
+          message.length > 120 ? message.slice(0, 117) + "…" : message;
+        await sendPushNotification(persona, body);
+      },
+    );
+    console.log("[ELIAS-WEB] Push notifier registered with proactive");
+  } catch {
+    // Proactive/push notification not available — skip
+  }
+})();
 
 // --- Start ---
 app.listen(PORT, "0.0.0.0", () => {
