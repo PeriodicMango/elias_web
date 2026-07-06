@@ -1,7 +1,19 @@
 import { Router } from "express";
+import { z } from "zod";
+import { validate } from "../middleware/validate.js";
 import { createLoader } from "../lazyLoad.js";
 
 const router = Router();
+
+const goalsAddSchema = z.object({
+  action: z.literal("add"),
+  description: z.string().min(1, "description 是必填项"),
+  due: z.string().optional(),
+});
+
+const goalsDoneSchema = z.object({
+  action: z.literal("done"),
+});
 
 const goalsLoader = createLoader(() =>
   import("../../../../eliasCore/src/helpers/tools/executors/goals.js"),
@@ -30,14 +42,10 @@ router.get("/", async (_req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", validate(goalsAddSchema), async (req, res) => {
   try {
     const g = await goalsLoader();
-    const { action, description, due } = req.body as {
-      action?: string;
-      description?: string;
-      due?: string;
-    };
+    const { action, description, due } = req.body as z.infer<typeof goalsAddSchema>;
     if (action === "add") {
       if (!description) return res.status(400).json({ error: "description 是必填项。" });
       const result = await g.manageGoals({ action: "add", description, due: due || "" });
@@ -50,11 +58,11 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", validate(goalsDoneSchema), async (req, res) => {
   try {
     const g = await goalsLoader();
     const { id } = req.params;
-    const { action } = req.body as { action?: string };
+    const { action } = req.body as z.infer<typeof goalsDoneSchema>;
     if (action === "done") {
       const result = await g.manageGoals({ action: "done", id });
       return res.json({ ok: true, message: result.content });

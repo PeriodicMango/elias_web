@@ -1,7 +1,13 @@
 import { Router } from "express";
+import { z } from "zod";
+import { validate } from "../middleware/validate.js";
 import { createLoader } from "../lazyLoad.js";
 
 const router = Router();
+
+const gcToggleSchema = z.object({
+  enabled: z.boolean(),
+});
 
 const channelLoader = createLoader(() => import("../../../../eliasCore/src/helpers/channelRegistry.js"));
 const personasLoader = createLoader(() => import("../../../../eliasCore/src/helpers/personas.js"));
@@ -30,12 +36,11 @@ router.get("/", async (_req, res) => {
   }
 });
 
-router.put("/:persona", async (req, res) => {
+router.put("/:persona", validate(gcToggleSchema), async (req, res) => {
   try {
     const cr = await channelLoader();
     const { persona } = req.params;
-    const { enabled } = req.body as { enabled?: boolean };
-    if (enabled === undefined) return res.status(400).json({ error: "enabled 是必填项。" });
+    const { enabled } = req.body as z.infer<typeof gcToggleSchema>;
 
     const channels = await cr.loadChannels();
     const gc = channels.groupChat ?? {};

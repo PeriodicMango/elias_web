@@ -1,7 +1,17 @@
 import { Router } from "express";
+import { z } from "zod";
+import { validate } from "../middleware/validate.js";
 import { createLoader } from "../lazyLoad.js";
 
 const router = Router();
+
+const pauseSchema = z.object({
+  duration: z.string().min(1, "duration 是必填项"),
+});
+
+const personaToggleSchema = z.object({
+  enabled: z.boolean(),
+});
 
 const proactiveLoader = createLoader(() => import("../../../../eliasCore/src/helpers/proactive.js"));
 const personasLoader = createLoader(() => import("../../../../eliasCore/src/helpers/personas.js"));
@@ -39,10 +49,9 @@ router.get("/", async (_req, res) => {
   }
 });
 
-router.post("/pause", async (req, res) => {
+router.post("/pause", validate(pauseSchema), async (req, res) => {
   try {
-    const { duration } = req.body as { duration?: string };
-    if (!duration) return res.status(400).json({ error: "duration 是必填项（如 30m, 1h）。" });
+    const { duration } = req.body as z.infer<typeof pauseSchema>;
 
     // Parse duration
     const match = duration.match(/^(\d+)\s*(m|min|分钟|h|小时)$/i);
@@ -82,12 +91,11 @@ router.post("/resume", async (_req, res) => {
   }
 });
 
-router.put("/:persona", async (req, res) => {
+router.put("/:persona", validate(personaToggleSchema), async (req, res) => {
   try {
     const proactive = await proactiveLoader();
     const { persona } = req.params;
-    const { enabled } = req.body as { enabled?: boolean };
-    if (enabled === undefined) return res.status(400).json({ error: "enabled 是必填项。" });
+    const { enabled } = req.body as z.infer<typeof personaToggleSchema>;
     await proactive.setPersonaProactiveDisabled(persona!, !enabled);
     res.json({ ok: true });
   } catch (err: unknown) {

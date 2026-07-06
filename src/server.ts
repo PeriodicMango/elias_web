@@ -14,6 +14,7 @@ import express from "express";
 import session from "express-session";
 import helmet from "helmet";
 import createSqliteStore from "connect-sqlite3";
+import rateLimit from "express-rate-limit";
 
 import { authRouter } from "./routes/auth.js";
 import { chatRouter } from "./routes/chat.js";
@@ -93,7 +94,15 @@ app.use("/auth", authRouter);
 
 // --- API routes (require session) ---
 app.use("/api/auth", authRouter); // /api/auth/me
-app.use("/api/chat", requireSession, chatRouter);
+// Rate limit /api/chat — 10 req/min per IP (LLM calls cost money)
+const chatLimiter = rateLimit({
+  windowMs: 60_000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "请求太频繁，请稍后再试。" },
+});
+app.use("/api/chat", chatLimiter, requireSession, chatRouter);
 app.use("/api/personas", requireSession, personasRouter);
 app.use("/api/dashboard", requireSession, dashboardRouter);
 app.use("/api/settings/api", requireSession, settingsApiRouter);

@@ -1,7 +1,15 @@
 import { Router } from "express";
+import { z } from "zod";
+import { validate } from "../middleware/validate.js";
 import { createLoader } from "../lazyLoad.js";
 
 const router = Router();
+
+const apiSettingsSchema = z.object({
+  model: z.string().optional(),
+  url: z.string().optional(),
+  key: z.string().optional(),
+});
 
 const configLoader = createLoader(() => import("../../../../eliasCore/src/config.js"));
 
@@ -17,9 +25,9 @@ router.get("/", async (_req, res) => {
   });
 });
 
-router.put("/", async (req, res) => {
+router.put("/", validate(apiSettingsSchema), async (req, res) => {
   const config = await configLoader();
-  const { model, url, key } = req.body as { model?: string; url?: string; key?: string };
+  const { model, url, key } = req.body as z.infer<typeof apiSettingsSchema>;
   const data = await config.readDataJson();
   if (model !== undefined) data.deepseekModel = model;
   if (url !== undefined) data.deepseekUrl = url;

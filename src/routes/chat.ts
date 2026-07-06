@@ -1,9 +1,17 @@
 import { Router } from "express";
+import { z } from "zod";
+import { validate } from "../middleware/validate.js";
 import { parseMoodTag } from "../../../../eliasCore/src/helpers/moodParser.js";
 import { createLoader } from "../lazyLoad.js";
 import type { ChatMessage } from "../../../../eliasCore/src/llm.js";
 
 const router = Router();
+
+const chatSchema = z.object({
+  persona: z.string().optional(),
+  message: z.string().min(1, "消息不能为空"),
+  fastMode: z.boolean().optional(),
+});
 
 // Module loaders — each module is lazy-loaded once, cached thereafter
 const llmLoader = createLoader(() => import("../../../../eliasCore/src/llm.js"));
@@ -15,17 +23,9 @@ const statusLoader = createLoader(() => import("../../../../eliasCore/src/helper
 const toolsLoader = createLoader(() => import("../../../../eliasCore/src/helpers/tools/index.js"));
 
 // POST /api/chat
-router.post("/", async (req, res) => {
+router.post("/", validate(chatSchema), async (req, res) => {
   try {
-    const { persona, message, fastMode } = req.body as {
-      persona?: string;
-      message?: string;
-      fastMode?: boolean;
-    };
-
-    if (!message?.trim()) {
-      return res.status(400).json({ error: "消息不能为空。" });
-    }
+    const { persona, message, fastMode } = req.body as z.infer<typeof chatSchema>;
 
     const p = persona?.trim() || "elias";
 

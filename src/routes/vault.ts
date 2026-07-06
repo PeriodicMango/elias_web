@@ -1,9 +1,20 @@
 import { Router } from "express";
+import { z } from "zod";
+import { validate } from "../middleware/validate.js";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { createLoader } from "../lazyLoad.js";
 
 const router = Router();
+
+const vaultWriteSchema = z.object({
+  filePath: z.string().min(1, "filePath 是必填项"),
+  content: z.string(),
+});
+
+const vaultDeleteSchema = z.object({
+  filePath: z.string().min(1, "filePath 是必填项"),
+});
 
 interface TreeNode {
   name: string;
@@ -80,13 +91,11 @@ router.get("/read", async (req, res) => {
 });
 
 // POST /api/vault/write
-router.post("/write", async (req, res) => {
+router.post("/write", validate(vaultWriteSchema), async (req, res) => {
   try {
     const shared = await sharedLoader();
     const eliasDataRoot = shared.ELIAS_DATA_ROOT as string;
-    const { filePath, content } = req.body as { filePath?: string; content?: string };
-    if (!filePath) return res.status(400).json({ error: "filePath 是必填项。" });
-    if (content === undefined) return res.status(400).json({ error: "content 是必填项。" });
+    const { filePath, content } = req.body as z.infer<typeof vaultWriteSchema>;
 
     const fullPath = shared.safeResolve(eliasDataRoot, filePath);
     await fs.mkdir(path.dirname(fullPath), { recursive: true });
@@ -99,12 +108,11 @@ router.post("/write", async (req, res) => {
 });
 
 // DELETE /api/vault/delete
-router.delete("/delete", async (req, res) => {
+router.delete("/delete", validate(vaultDeleteSchema), async (req, res) => {
   try {
     const shared = await sharedLoader();
     const eliasDataRoot = shared.ELIAS_DATA_ROOT as string;
-    const filePath = req.body.filePath as string;
-    if (!filePath) return res.status(400).json({ error: "filePath 是必填项。" });
+    const { filePath } = req.body as z.infer<typeof vaultDeleteSchema>;
 
     const fullPath = shared.safeResolve(eliasDataRoot, filePath);
     await fs.unlink(fullPath);

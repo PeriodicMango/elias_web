@@ -1,9 +1,22 @@
 import { Router } from "express";
+import { z } from "zod";
+import { validate } from "../middleware/validate.js";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { createLoader } from "../lazyLoad.js";
 
 const router = Router();
+
+const personaUpdateSchema = z.object({
+  fileContent: z.string().optional(),
+  avatarUrl: z.string().optional(),
+  avatarData: z.string().optional(),
+});
+
+const personaRenameSchema = z.object({
+  from: z.string().min(1, "from 是必填项"),
+  to: z.string().min(1, "to 是必填项"),
+});
 
 const personasLoader = createLoader(() => import("../../../../eliasCore/src/helpers/personas.js"));
 const commandsLoader = createLoader(() => import("../../../../eliasCore/src/helpers/commands.js"));
@@ -64,14 +77,11 @@ router.get("/:name", async (req, res) => {
 });
 
 // PUT /api/personas/:name — update persona file and/or avatar
-router.put("/:name", async (req, res) => {
+router.put("/:name", validate(personaUpdateSchema), async (req, res) => {
   try {
     const p = await personasLoader();
     const { name } = req.params;
-    const { fileContent, avatarUrl } = req.body as {
-      fileContent?: string;
-      avatarUrl?: string;
-    };
+    const { fileContent, avatarUrl } = req.body as z.infer<typeof personaUpdateSchema>;
     const { PATHS } = await import("../../../../eliasCore/src/config.js");
 
     let updated = false;
@@ -135,13 +145,10 @@ router.put("/:name", async (req, res) => {
 });
 
 // POST /api/personas/rename
-router.post("/rename", async (req, res) => {
+router.post("/rename", validate(personaRenameSchema), async (req, res) => {
   try {
     const c = await commandsLoader();
-    const { from, to } = req.body as { from?: string; to?: string };
-    if (!from || !to) {
-      return res.status(400).json({ error: "from 和 to 是必填项。" });
-    }
+    const { from, to } = req.body as z.infer<typeof personaRenameSchema>;
     const result = await c.renamePersona(from, to);
     res.json({ ok: true, message: result });
   } catch (err: unknown) {
