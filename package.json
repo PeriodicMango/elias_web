@@ -5,10 +5,10 @@
   "description": "Web admin console for Elias Discord bot",
   "scripts": {
     "start": "tsx src/server.ts",
-    "dev": "tsx watch src/server.ts"
+    "dev": "tsx watch src/server.ts",
+    "postinstall": "npx lefthook install"
   },
   "dependencies": {
-    "@vitest/coverage-v8": "^4.1.10",
     "connect-sqlite3": "^0.9.16",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
@@ -21,7 +21,9 @@
     "@types/express": "^4.17.21",
     "@types/express-session": "^1.18.0",
     "@types/node": "^22.7.4",
+    "@vitest/coverage-v8": "^4.1.10",
     "jsdom": "^29.1.1",
+    "lefthook": "^2.1.9",
     "tsx": "^4.19.1",
     "typescript": "^5.6.3",
     "vitest": "^4.1.9"

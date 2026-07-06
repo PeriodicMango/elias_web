@@ -122,6 +122,19 @@ const staticDir = fs.existsSync(appFrontend) ? appFrontend : localPublic;
 console.log(`[ELIAS-WEB] Serving static from: ${staticDir}`);
 app.use(express.static(staticDir));
 
+// --- Health check ---
+app.get("/health", (_req, res) => {
+  const mem = process.memoryUsage();
+  res.json({
+    ok: true,
+    uptime: process.uptime(),
+    memory: {
+      heapMB: Math.round(mem.heapUsed / 1024 / 1024 * 100) / 100,
+      rssMB: Math.round(mem.rss / 1024 / 1024 * 100) / 100,
+    },
+  });
+});
+
 // --- SPA fallback — serve index.html for any non-API route ---
 const indexFile = path.join(staticDir, "index.html");
 app.get("*", (_req, res) => {
