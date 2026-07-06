@@ -55,6 +55,7 @@ app.use(
         frameSrc: ["'none'"],
       },
     },
+    strictTransportSecurity: false,
     crossOriginOpenerPolicy: false,
     crossOriginResourcePolicy: { policy: "cross-origin" },
   }),
