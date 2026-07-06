@@ -8,9 +8,11 @@
     "dev": "tsx watch src/server.ts"
   },
   "dependencies": {
+    "connect-sqlite3": "^0.9.16",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
-    "express-session": "^1.18.0"
+    "express-session": "^1.18.0",
+    "helmet": "^8.2.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",

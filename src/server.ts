@@ -12,6 +12,8 @@ dotenv.config({ path: path.resolve(__dirname, "..", ".env") });
 
 import express from "express";
 import session from "express-session";
+import helmet from "helmet";
+import createSqliteStore from "connect-sqlite3";
 
 import { authRouter } from "./routes/auth.js";
 import { chatRouter } from "./routes/chat.js";
@@ -36,6 +38,26 @@ const SESSION_SECRET = process.env.SESSION_SECRET!;
 
 const app = express();
 
+// Security headers
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.discordapp.com"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "https://cdn.discordapp.com", "https:"],
+        connectSrc: ["'self'", "https://discord.com", "https://cdn.discordapp.com"],
+        fontSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        frameSrc: ["'none'"],
+      },
+    },
+    crossOriginOpenerPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  }),
+);
+
 // Body parsing
 app.use(express.json());
 
@@ -49,16 +71,19 @@ app.use("/api", (_req, res, next) => {
   next();
 });
 
-// Session
+// Session — SQLite-backed (survives restarts, no external DB needed)
+const SQLiteStore = createSqliteStore(session);
+const sessionDbPath = path.resolve(__dirname, "..", "sessions.db");
+
 app.use(
   session({
+    store: new SQLiteStore({ db: "sessions.db", dir: path.resolve(__dirname, "..") }),
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
       secure: false,
       maxAge: 30 * 24 * 60 * 60 * 1000,
-      // sameSite omitted — some browsers restrict SameSite cookies on HTTP/IP sites
     },
   }),
 );

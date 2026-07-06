@@ -1,68 +1,69 @@
-# elias-web
+# Elias Web Console
 
-Web admin console for Elias. Discord OAuth2 login, chat interface, persona editor, knowledge base browser.
+Express API server for the Elias companion bot. Serves the web console frontend (SPA) and provides REST API endpoints for chat, persona management, knowledge base, and system settings.
 
-## Features
+Frontend is served from `platforms/app/frontend/` (separate repo), falling back to `public/` if unavailable.
 
-- Discord OAuth2 authentication (master-only write access)
-- Chat with any persona (dual-pipeline + fast mode, thinking toggle)
-- Persona management (edit YAML, upload avatars, rename)
-- Knowledge base browser (file tree, editor, search)
-- Goals viewer
-- Style customization (light/dark/blue themes, accent colors, font size)
-- Session persistence (30-day cookie)
-
-## Structure
-
-```
-src/
-  server.ts         ← Express app, session, static serving, SPA fallback
-  routes/
-    auth.ts         ← Discord OAuth2 login/callback/logout
-    chat.ts         ← POST /api/chat, POST /api/chat/clear
-    personas.ts     ← GET/PUT persona details, avatar upload
-    vault.ts        ← KB tree, read, write, delete, search
-    goals.ts        ← GET goals, POST add, PUT done
-    dashboard.ts    ← System status
-    settings-api.ts ← API config read/write
-    settings-master.ts    ← Master info + transfer
-    settings-proactive.ts ← Proactive pause/resume
-    settings-groupchat.ts ← Group chat toggles
-    activity.ts     ← Activity log viewer
-public/
-  css/main.css      ← Design system (Hyperspace + Tabler inspired)
-  js/
-    app.js          ← SPA: auth state, tab routing, theme engine
-    api.js          ← fetch() wrappers with auth handling
-  index.html        ← App shell
-```
-
-## Setup
+## Quick Start
 
 ```bash
 npm install
+cp .env.example .env   # edit with your values
+npm start              # http://localhost:3457
 ```
 
-Requires `eliasCore` in `../../../eliasCore/`. Environment variables in `.env`:
+## Required Env Vars
+
+| Variable | Purpose |
+|----------|---------|
+| `SESSION_SECRET` | Session signing secret |
+| `DISCORD_CLIENT_ID` | Discord OAuth client ID |
+| `DISCORD_CLIENT_SECRET` | Discord OAuth client secret |
+| `DISCORD_REDIRECT_URI` | OAuth callback URL |
+
+eliasCore `.env` (API keys, model) is auto-loaded from `../../../eliasCore/.env`.
+
+## Architecture
 
 ```
-DISCORD_CLIENT_ID=...
-DISCORD_CLIENT_SECRET=...
-DISCORD_REDIRECT_URI=...
-SESSION_SECRET=...
+src/
+  server.ts            ← Express app, session, CORS, static serving
+  lazyLoad.ts          ← Dynamic import helper
+  middleware/auth.ts    ← Session cookie + Bearer token auth
+  routes/
+    auth.ts            ← Discord OAuth, JWT tokens, session handoff
+    chat.ts            ← Chat with personas (LLM)
+    personas.ts        ← Persona CRUD + avatar upload
+    vault.ts           ← Knowledge base file tree + search
+    goals.ts           ← Goals list + add/done
+    dashboard.ts       ← System status (uptime, memory, model)
+    home.ts            ← LLM-generated greeting for homepage
+    settings-api.ts, settings-proactive.ts,
+    settings-groupchat.ts, settings-master.ts
+    activity.ts        ← Daily activity log viewer
 ```
 
-The eliasCore `.env` (with `DEEPSEEK_API_KEY`) is also loaded automatically.
-
-## Running
+## Test
 
 ```bash
-npm start
-# or: npx tsx src/server.ts
-# Listens on port 3457
+npx vitest run
 ```
 
-## URLs
+71 tests covering Feature system, API client, greeting bubble, and homepage.
 
-- HTTP: `http://209.38.16.128:3457`
-- HTTPS via Tailscale: `https://ubuntu-s-1vcpu-1gb-syd1.tail5e2b17.ts.net`
+## API Docs
+
+[API.md](../app/API.md) — all 36 endpoints with request/response shapes and error codes.
+
+## Deploy
+
+```bash
+# Cloud: pull both repos
+cd /root/elias/platforms/web && git pull
+cd /root/elias/platforms/app && git pull
+systemctl restart elias-web.service
+```
+
+## License
+
+MIT
