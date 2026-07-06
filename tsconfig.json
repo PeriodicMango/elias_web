@@ -2,15 +2,14 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "declaration": false,
-    "sourceMap": true,
-    "baseUrl": "."
+    "sourceMap": true
   },
   "include": ["src/**/*.ts", "../../eliasCore/src/**/*.ts"],
   "exclude": ["node_modules", "dist", "public"]

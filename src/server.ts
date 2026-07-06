@@ -93,7 +93,6 @@ app.use(
 app.use("/auth", authRouter);
 
 // --- API routes (require session) ---
-app.use("/api/auth", authRouter); // /api/auth/me
 // Rate limit /api/chat — 10 req/min per IP (LLM calls cost money)
 const chatLimiter = rateLimit({
   windowMs: 60_000,

@@ -19,8 +19,8 @@ export function validate(schema: ZodSchema) {
       next();
     } catch (err) {
       if (err instanceof ZodError) {
-        const messages = err.errors.map(
-          (e) => `${e.path.join(".") || "body"}: ${e.message}`
+        const messages = err.issues.map(
+          (e) => `${e.path.map(String).join(".") || "body"}: ${e.message}`
         );
         res.status(400).json({ error: messages.join("; ") });
         return;

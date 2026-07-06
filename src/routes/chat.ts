@@ -66,17 +66,19 @@ router.post("/", validate(chatSchema), async (req, res) => {
       ]);
 
     // 3. Load context
-    const [recentMem, semKb, userCtx, statusPrompt] = await Promise.all([
+    const [recentMem, semKb, userCtx, statusPrompt, wakeUp] = await Promise.all([
       memory.getRecentMemory(p),
       memory.getSemanticKnowledge(message),
       memory.getUserContext(message),
       statusMod.getStatusPrompt(p),
+      statusMod.onUserMessage("master", p),
     ]);
 
     const now = new Date();
     const contextSuffix = [
       `当前时间: ${now.toLocaleString("zh-CN", { timeZone: "Australia/Sydney" })}`,
       statusPrompt || "",
+      wakeUp || "",
       recentMem || "",
       semKb || "",
       userCtx || "",
@@ -112,8 +114,6 @@ router.post("/", validate(chatSchema), async (req, res) => {
     const history = await historyMod.getHistory(historyPath);
     history.push({ role: "user", content: message } as ChatMessage);
 
-    // 6. Status wake-up
-    const wakeUp = await statusMod.onUserMessage("master", p);
 
     // 7. LLM call
     const toolDefs = tools.getAllToolDefinitions();
