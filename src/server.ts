@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -80,11 +81,17 @@ app.use("/api/activity", requireSession, activityRouter);
 app.use("/api/home", requireSession, homeRouter);
 
 // --- Static frontend ---
-app.use(express.static(path.resolve(__dirname, "..", "..", "app", "frontend")));
+// Try Capacitor app frontend first (local dev), fall back to local public/ (cloud)
+const appFrontend = path.resolve(__dirname, "..", "..", "app", "frontend");
+const localPublic = path.resolve(__dirname, "..", "public");
+const staticDir = fs.existsSync(appFrontend) ? appFrontend : localPublic;
+console.log(`[ELIAS-WEB] Serving static from: ${staticDir}`);
+app.use(express.static(staticDir));
 
 // --- SPA fallback — serve index.html for any non-API route ---
+const indexFile = path.join(staticDir, "index.html");
 app.get("*", (_req, res) => {
-  res.sendFile(path.resolve(__dirname, "..", "..", "app", "frontend", "index.html"));
+  res.sendFile(indexFile);
 });
 
 // --- Start ---
