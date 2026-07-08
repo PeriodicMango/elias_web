@@ -8,13 +8,17 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Load .env files — use cwd-based paths because tsx may compile to a cache dir
 // where __dirname points to a temp location rather than the source tree.
 const ROOT = path.resolve(process.cwd(), "..", ".."); // platforms/web → elias root
+console.log("[ELIAS-WEB] cwd:", process.cwd());
+console.log("[ELIAS-WEB] ROOT:", ROOT);
 dotenv.config({ path: path.join(ROOT, "eliasCore", ".env"), override: false });
 dotenv.config({ path: path.join(process.cwd(), ".env") });
 // Fallback: try __dirname-relative paths for direct node (non-tsx) execution
 if (!process.env.DISCORD_CLIENT_ID) {
+  console.log("[ELIAS-WEB] cwd-based load failed, trying __dirname fallback...");
   dotenv.config({ path: path.resolve(__dirname, "..", "..", "..", "eliasCore", ".env"), override: false });
   dotenv.config({ path: path.resolve(__dirname, "..", ".env") });
 }
+console.log("[ELIAS-WEB] DISCORD_CLIENT_ID:", process.env.DISCORD_CLIENT_ID ? "SET" : "NOT SET");
 
 import express from "express";
 import session from "express-session";
