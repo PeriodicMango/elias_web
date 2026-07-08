@@ -17,40 +17,50 @@ const router = Router();
 // ---------------------------------------------------------------------------
 
 let vapidKeys: { publicKey: string; privateKey: string } | null = null;
+let vapidPending: Promise<{ publicKey: string; privateKey: string }> | null = null;
 
 async function getVapidKeys(): Promise<{ publicKey: string; privateKey: string }> {
   if (vapidKeys) return { publicKey: vapidKeys.publicKey, privateKey: vapidKeys.privateKey };
+  if (vapidPending) return vapidPending;
 
-  const { PATHS } = await import("../../../../eliasCore/src/config.js");
-  const dataPath = path.join(PATHS.base, "data.json");
+  vapidPending = (async () => {
+    const { PATHS } = await import("../../../../eliasCore/src/config.js");
+    const dataPath = path.join(PATHS.base, "data.json");
 
-  try {
-    const raw = await fs.readFile(dataPath, "utf8");
-    const data = JSON.parse(raw) as Record<string, unknown>;
-    if (data.vapidPublicKey && data.vapidPrivateKey) {
-      vapidKeys = {
-        publicKey: data.vapidPublicKey as string,
-        privateKey: data.vapidPrivateKey as string,
-      };
-      return vapidKeys;
+    try {
+      const raw = await fs.readFile(dataPath, "utf8");
+      const data = JSON.parse(raw) as Record<string, unknown>;
+      if (data.vapidPublicKey && data.vapidPrivateKey) {
+        vapidKeys = {
+          publicKey: data.vapidPublicKey as string,
+          privateKey: data.vapidPrivateKey as string,
+        };
+        return vapidKeys;
+      }
+    } catch { /* data.json may not exist yet */ }
+
+    // Generate new keys
+    const newKeys = webpush.generateVAPIDKeys();
+    vapidKeys = newKeys;
+    // Save to data.json
+    try {
+      const raw = await fs.readFile(dataPath, "utf8");
+      const data = JSON.parse(raw) as Record<string, unknown>;
+      data.vapidPublicKey = newKeys.publicKey;
+      data.vapidPrivateKey = newKeys.privateKey;
+      await fs.writeFile(dataPath, JSON.stringify(data, null, 2), "utf8");
+    } catch {
+      console.warn("[NOTIFICATIONS] Could not save VAPID keys to data.json");
     }
-  } catch { /* data.json may not exist yet */ }
 
-  // Generate new keys
-  const newKeys = webpush.generateVAPIDKeys();
-  vapidKeys = newKeys;
-  // Save to data.json
+    return vapidKeys;
+  })();
+
   try {
-    const raw = await fs.readFile(dataPath, "utf8");
-    const data = JSON.parse(raw) as Record<string, unknown>;
-    data.vapidPublicKey = newKeys.publicKey;
-    data.vapidPrivateKey = newKeys.privateKey;
-    await fs.writeFile(dataPath, JSON.stringify(data, null, 2), "utf8");
-  } catch {
-    console.warn("[NOTIFICATIONS] Could not save VAPID keys to data.json");
+    return await vapidPending;
+  } finally {
+    vapidPending = null;
   }
-
-  return vapidKeys;
 }
 
 // ---------------------------------------------------------------------------
@@ -134,7 +144,7 @@ export async function sendPushNotification(
   title: string,
   body: string,
 ): Promise<{ sent: number; failed: number }> {
-  const subs = await loadSubscriptions();
+  let subs = await loadSubscriptions();
   if (subs.length === 0) return { sent: 0, failed: 0 };
 
   const keys = await getVapidKeys();
@@ -153,25 +163,29 @@ export async function sendPushNotification(
     subs.map((sub) => webpush.sendNotification(sub, payload)),
   );
 
-  for (const result of results) {
-    if (result.status === "fulfilled") sent++;
-    else {
+  // Collect stale endpoints (410 Gone) for cleanup
+  const staleEndpoints = new Set<string>();
+  results.forEach((result, i) => {
+    if (result.status === "fulfilled") {
+      sent++;
+    } else {
       failed++;
-      // Remove subscriptions that returned 410 (Gone — expired)
       if (
         result.reason &&
         typeof result.reason === "object" &&
         "statusCode" in result.reason &&
         (result.reason as { statusCode: number }).statusCode === 410
       ) {
-        const idx = results.indexOf(result);
-        if (idx >= 0) subs.splice(idx, 1);
+        staleEndpoints.add(subs[i]!.endpoint);
       }
     }
-  }
+  });
 
-  // Save cleaned subscriptions
-  if (failed > 0) await saveSubscriptions(subs);
+  // Remove stale subscriptions (filter avoids index-shift during iteration)
+  if (staleEndpoints.size > 0) {
+    subs = subs.filter((s) => !staleEndpoints.has(s.endpoint));
+    await saveSubscriptions(subs);
+  }
 
   return { sent, failed };
 }

@@ -1,119 +1,135 @@
 // ---------------------------------------------------------------------------
-// API client — contract tests (no module import, tests the pattern)
-// ---------------------------------------------------------------------------
+// API client tests — tests the real api.js module
 // @vitest-environment jsdom
+// ---------------------------------------------------------------------------
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 
-describe("API client — BASE config", () => {
-  it("uses empty BASE by default", () => {
-    // Verify the pattern: window.__ELIAS_API__ ?? ""
-    const BASE = window.__ELIAS_API__ ?? "";
-    expect(BASE).toBe("");
-  });
-
-  it("custom BASE via window.__ELIAS_API__", () => {
-    window.__ELIAS_API__ = "http://192.168.1.100:3457";
-    const BASE = window.__ELIAS_API__ ?? "";
-    expect(BASE).toBe("http://192.168.1.100:3457");
-  });
-
-  it("falls back to empty string when __ELIAS_API__ is not set", () => {
-    delete window.__ELIAS_API__;
-    const BASE = window.__ELIAS_API__ ?? "";
-    expect(BASE).toBe("");
-  });
-});
-
-describe("API client — JWT token fallback", () => {
-  it("reads token from localStorage", () => {
-    localStorage.setItem("elias-auth-token", "test-token-123");
-    const token = localStorage.getItem("elias-auth-token");
-    expect(token).toBe("test-token-123");
-  });
-
-  it("clear token on auth error", () => {
-    localStorage.setItem("elias-auth-token", "old-token");
-    localStorage.removeItem("elias-auth-token");
-    expect(localStorage.getItem("elias-auth-token")).toBeNull();
-  });
-
-  it("sends Authorization header when token exists", () => {
-    localStorage.setItem("elias-auth-token", "bearer-token-456");
-    const token = localStorage.getItem("elias-auth-token");
-    expect(token).toBe("bearer-token-456");
-
-    // Simulate the authHeaders pattern from api.js
-    const headers = { "Content-Type": "application/json" };
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-    expect(headers["Authorization"]).toBe("Bearer bearer-token-456");
-  });
-
-  it("does not send Authorization header when no token", () => {
+describe("API client — request methods", () => {
+  beforeEach(() => {
     localStorage.clear();
-    const token = localStorage.getItem("elias-auth-token");
-    expect(token).toBeNull();
-
-    const headers = { "Content-Type": "application/json" };
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-    expect(headers["Authorization"]).toBeUndefined();
+    vi.restoreAllMocks();
   });
 
-  it("handles token expiry by clearing localStorage", () => {
-    localStorage.setItem("elias-auth-token", "expired-token");
-    // Simulate handleAuthError
-    localStorage.removeItem("elias-auth-token");
-    expect(localStorage.getItem("elias-auth-token")).toBeNull();
-  });
-});
+  it("getJSON sends GET with auth headers and credentials", async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ data: "ok" }),
+    });
+    vi.stubGlobal("fetch", mockFetch);
 
-describe("API client — error handling", () => {
-  it("detects 401 status correctly", () => {
-    const status = 401;
-    const isUnauthorized = status === 401;
-    expect(isUnauthorized).toBe(true);
-  });
+    const { getJSON } = await import("../../app/frontend/js/api.js");
+    const result = await getJSON("/api/test");
 
-  it("detects non-401 errors correctly", () => {
-    const status = 500;
-    const isUnauthorized = status === 401;
-    expect(isUnauthorized).toBe(false);
-  });
-
-  it("extracts error body from JSON response", async () => {
-    const mockJson = () => Promise.resolve({ error: "Server error" });
-    const body = await mockJson();
-    expect(body.error).toBe("Server error");
-  });
-
-  it("falls back to HTTP status when no error body", async () => {
-    const status = 503;
-    const mockJson = () => Promise.resolve({});
-    const body = await mockJson();
-    if (body.error) {
-      expect(body.error).toBeDefined();
-    } else {
-      expect(`HTTP ${status}`).toBe("HTTP 503");
-    }
-  });
-});
-
-describe("API client — credentials include", () => {
-  it("fetch options include credentials: 'include'", () => {
-    const options = {
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-    };
+    expect(result).toEqual({ data: "ok" });
+    const [url, options] = mockFetch.mock.calls[0];
+    expect(url).toContain("/api/test");
+    expect(options.method).toBe("GET");
     expect(options.credentials).toBe("include");
   });
-});
 
-describe("API client — HEAD method for OPTIONS preflight", () => {
-  it("OPTIONS request pattern for CORS", () => {
-    const method = "OPTIONS";
-    // Server responds 204 for OPTIONS
-    const optionsResponse = { status: 204 };
-    expect(optionsResponse.status).toBe(204);
-    expect(method).toBe("OPTIONS");
+  it("postJSON sends POST with stringified body", async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ ok: true }),
+    });
+    vi.stubGlobal("fetch", mockFetch);
+
+    const { postJSON } = await import("../../app/frontend/js/api.js");
+    await postJSON("/api/test", { key: "value" });
+
+    const [, options] = mockFetch.mock.calls[0];
+    expect(options.method).toBe("POST");
+    expect(options.body).toBe('{"key":"value"}');
+  });
+
+  it("putJSON sends PUT", async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ ok: true }),
+    });
+    vi.stubGlobal("fetch", mockFetch);
+
+    const { putJSON } = await import("../../app/frontend/js/api.js");
+    await putJSON("/api/test", { x: 1 });
+
+    const [, options] = mockFetch.mock.calls[0];
+    expect(options.method).toBe("PUT");
+  });
+
+  it("deleteJSON sends DELETE", async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ ok: true }),
+    });
+    vi.stubGlobal("fetch", mockFetch);
+
+    const { deleteJSON } = await import("../../app/frontend/js/api.js");
+    await deleteJSON("/api/test", {});
+
+    const [, options] = mockFetch.mock.calls[0];
+    expect(options.method).toBe("DELETE");
+  });
+
+  it("handles 401 by calling handleAuthError and throwing", async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 401,
+      json: () => Promise.resolve({}),
+    });
+    vi.stubGlobal("fetch", mockFetch);
+    localStorage.setItem("elias-auth-token", "expired");
+
+    const { getJSON } = await import("../../app/frontend/js/api.js");
+
+    await expect(getJSON("/api/test")).rejects.toThrow("Unauthorized");
+    // Should have cleared the token
+    expect(localStorage.getItem("elias-auth-token")).toBeNull();
+  });
+
+  it("throws parsed error body for non-401 non-ok responses", async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: () => Promise.resolve({ error: "Server error" }),
+    });
+    vi.stubGlobal("fetch", mockFetch);
+
+    const { getJSON } = await import("../../app/frontend/js/api.js");
+
+    await expect(getJSON("/api/test")).rejects.toThrow("Server error");
+  });
+
+  it("falls back to HTTP status string when no error body", async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 503,
+      json: () => Promise.resolve({}),
+    });
+    vi.stubGlobal("fetch", mockFetch);
+
+    const { getJSON } = await import("../../app/frontend/js/api.js");
+
+    await expect(getJSON("/api/test")).rejects.toThrow("HTTP 503");
+  });
+
+  it("sends Bearer token from localStorage", async () => {
+    localStorage.setItem("elias-auth-token", "my-token-123");
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({}),
+    });
+    vi.stubGlobal("fetch", mockFetch);
+
+    const { getJSON } = await import("../../app/frontend/js/api.js");
+    await getJSON("/api/test");
+
+    const [, options] = mockFetch.mock.calls[0];
+    expect(options.headers.Authorization).toBe("Bearer my-token-123");
   });
 });

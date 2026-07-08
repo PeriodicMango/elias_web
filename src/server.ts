@@ -22,7 +22,7 @@ import helmet from "helmet";
 import createSqliteStore from "connect-sqlite3";
 import rateLimit from "express-rate-limit";
 
-import { authRouter } from "./routes/auth.js";
+import { authRouter, verifyApiToken } from "./routes/auth.js";
 import { chatRouter } from "./routes/chat.js";
 import { personasRouter } from "./routes/personas.js";
 import { dashboardRouter } from "./routes/dashboard.js";
@@ -53,10 +53,10 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.discordapp.com"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.discordapp.com", "https://cdn.jsdelivr.net"],
         styleSrc: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", "data:", "https://cdn.discordapp.com", "https:"],
-        connectSrc: ["'self'", "https://discord.com", "https://cdn.discordapp.com"],
+        connectSrc: ["'self'", "https://discord.com", "https://cdn.discordapp.com", "https://cdn.jsdelivr.net"],
         fontSrc: ["'self'"],
         objectSrc: ["'none'"],
         frameSrc: ["'none'"],
@@ -71,6 +71,22 @@ app.use(
 
 // Body parsing
 app.use(express.json());
+
+// Disable caching — ensures browser always fetches fresh JS/CSS/HTML
+app.use((_req, res, next) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  next();
+});
+
+// Log all requests when LOG_REQUESTS env var is set
+if (process.env.LOG_REQUESTS === "true") {
+  app.use((req, _res, next) => {
+    console.log(`[REQ] ${req.method} ${req.url} | cookie:${!!req.headers.cookie} | auth:${!!req.headers.authorization}`);
+    next();
+  });
+}
 
 // CORS — allow cross-origin API access (Capacitor app, PWA, etc.)
 app.use("/api", (_req, res, next) => {
@@ -96,8 +112,6 @@ app.use(
     saveUninitialized: false,
     cookie: {
       secure: false,
-      httpOnly: true,
-      sameSite: "lax",
       maxAge: 30 * 24 * 60 * 60 * 1000,
     },
   }),
@@ -130,11 +144,34 @@ app.use("/api/notifications", notificationsRouter);
 app.use("/api/models", requireSession, modelsRouter);
 
 // --- Static frontend ---
-// Try Capacitor app frontend first (local dev), fall back to local public/ (cloud)
 const appFrontend = path.resolve(__dirname, "..", "..", "app", "frontend");
 const localPublic = path.resolve(__dirname, "..", "public");
 const staticDir = fs.existsSync(appFrontend) ? appFrontend : localPublic;
 console.log(`[ELIAS-WEB] Serving static from: ${staticDir}`);
+const indexFile = path.join(staticDir, "index.html");
+
+// Auth token handler — when ?auth=<token> is present (from OAuth callback),
+// set the session cookie from a same-site context, then redirect to clean /.
+// This fixes the cookie delivery issue: the browser reliably accepts cookies
+// set from a same-site request, unlike those set mid-cross-site-OAuth-redirect.
+app.use((req, res, next) => {
+  const authToken = typeof req.query.auth === "string" ? req.query.auth : undefined;
+  if (!authToken) return next();
+
+  const user = verifyApiToken(authToken);
+  if (!user) {
+    console.log(`[AUTH-REDIR] Token invalid, falling through`);
+    return next();
+  }
+
+  console.log(`[AUTH-REDIR] Setting session for ${user.username}, then redirecting to /`);
+  req.session.user = user;
+  req.session.save((err) => {
+    if (err) console.error(`[AUTH-REDIR] Session save error:`, err);
+    res.redirect("/");
+  });
+});
+
 app.use(express.static(staticDir));
 
 // --- Health check ---
@@ -151,7 +188,6 @@ app.get("/health", (_req, res) => {
 });
 
 // --- SPA fallback — serve index.html for any non-API route ---
-const indexFile = path.join(staticDir, "index.html");
 app.get("*", (_req, res) => {
   res.sendFile(indexFile);
 });

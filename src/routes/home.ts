@@ -3,8 +3,9 @@ import { createLoader } from "../lazyLoad.js";
 
 const router = Router();
 
-// Cached greetings per persona (regenerate on restart)
-const greetingCache = new Map<string, string>();
+// Cached greetings per persona — expire after 30 minutes
+const CACHE_TTL_MS = 30 * 60 * 1000;
+const greetingCache = new Map<string, { greeting: string; timestamp: number }>();
 
 const promptLoader = createLoader(() => import("../../../../eliasCore/src/prompt.js"));
 const llmLoader = createLoader(() => import("../../../../eliasCore/src/llm.js"));
@@ -15,10 +16,10 @@ router.get("/greeting", async (req, res) => {
   try {
     const persona = (req.query.persona as string) || "elias";
 
-    // Return cached greeting if available
+    // Return cached greeting if still fresh
     const cached = greetingCache.get(persona);
-    if (cached) {
-      return res.json({ greeting: cached });
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+      return res.json({ greeting: cached.greeting });
     }
 
     const [prompt, llm, personas] = await Promise.all([
@@ -50,7 +51,7 @@ router.get("/greeting", async (req, res) => {
     );
 
     const greeting = result.text.trim() || "嗯，来了。";
-    greetingCache.set(persona, greeting);
+    greetingCache.set(persona, { greeting, timestamp: Date.now() });
 
     res.json({ greeting });
   } catch (err: unknown) {

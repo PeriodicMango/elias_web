@@ -105,7 +105,7 @@ router.get("/", async (_req, res) => {
       models.push({
         name: entry.name,
         rendererType,
-        modelPath: modelPath ?? `models/${entry.name}/`,
+        modelPath: modelPath ? `models/${modelPath}` : `models/${entry.name}/`,
         fileCount,
       });
     }

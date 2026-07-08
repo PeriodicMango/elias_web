@@ -47,7 +47,7 @@ router.put("/:persona", validate(gcToggleSchema), async (req, res) => {
     let list: string[] = gc.personas ?? [];
     if (enabled && !list.includes(persona!)) list.push(persona!);
     if (!enabled) list = list.filter((n: string) => n !== persona);
-    channels.groupChat = { ...gc, personas: list };
+    channels.groupChat = { enabled: gc.enabled ?? false, channelId: gc.channelId ?? null, personas: list };
     await cr.saveChannels(channels);
     res.json({ ok: true });
   } catch (err: unknown) {

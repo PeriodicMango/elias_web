@@ -68,8 +68,8 @@ async function main() {
   // ---- 3. API requires auth ----
   console.log("\n=== Auth Required ===");
   {
-    const res = await fetch(`${BASE}/api/auth/me`);
-    check("GET /api/auth/me → 401 (no session)", res.status === 401);
+    const res = await fetch(`${BASE}/auth/me`);
+    check("GET /auth/me → 401 (no session)", res.status === 401);
   }
   {
     const res = await fetch(`${BASE}/api/chat`, {

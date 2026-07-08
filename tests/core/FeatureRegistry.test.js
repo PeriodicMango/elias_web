@@ -12,7 +12,7 @@ class MockFeature extends Feature {
   mounted = null;
   unmounted = false;
 
-  async mount(container) { this.mounted = container; this.container = container; }
+  async mount(container) { this.mounted = container; this.container = container; this.unmounted = false; }
   async unmount() { this.unmounted = true; this.container = null; }
 }
 
@@ -198,5 +198,38 @@ describe("FeatureRegistry", () => {
     }
     registry.register(new NoWidgetFeature("nw", "tool"));
     expect(registry.collectWidgetData()).toEqual({});
+  });
+
+  it("deactivate unmounts the active feature and clears state", async () => {
+    const f = new MockFeature("a", "companion");
+    registry.register(f);
+
+    await registry.activate("a", document.createElement("div"));
+    expect(f.mounted).not.toBeNull();
+    expect(f.unmounted).toBe(false);
+
+    await registry.deactivate();
+    expect(f.unmounted).toBe(true);
+  });
+
+  it("deactivate is safe when no feature is active", async () => {
+    // Should not throw
+    await registry.deactivate();
+  });
+
+  it("deactivate then re-activate allows fresh mount", async () => {
+    const f = new MockFeature("a", "companion");
+    registry.register(f);
+
+    const el = document.createElement("div");
+    await registry.activate("a", el);
+    await registry.deactivate();
+    expect(f.unmounted).toBe(true);
+
+    // Re-activate: should mount fresh (not skip due to same-id guard)
+    const el2 = document.createElement("div");
+    await registry.activate("a", el2);
+    expect(f.mounted).toBe(el2);
+    expect(f.unmounted).toBe(false);
   });
 });

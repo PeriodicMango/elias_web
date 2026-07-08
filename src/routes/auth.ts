@@ -80,13 +80,13 @@ router.get("/handoff", (req, res) => {
 });
 
 // --- GET /auth/login --- redirect to Discord OAuth ---
-router.get("/login", (_req, res) => {
+router.get("/login", (req, res) => {
   if (!CLIENT_ID) {
     return res.status(500).send("DISCORD_CLIENT_ID not configured.");
   }
 
   // Detect if login was initiated from the Tailscale HTTPS domain
-  const referer = _req.get("Referer") ?? "";
+  const referer = req.get("Referer") ?? "";
   const fromPWA = referer.includes(".ts.net") ? "1" : "0";
 
   const url =
@@ -157,27 +157,27 @@ router.get("/callback", async (req, res) => {
       return res.status(403).send("你不是我的 Master。");
     }
 
-    // If login came from PWA (Tailscale HTTPS), hand off session
-    if (fromPWA && TAILSCALE_URL) {
-      const token = crypto.randomBytes(32).toString("hex");
-      handoffTokens.set(token, {
-        user: { id: user.id, username: user.username, avatar: user.avatar ?? "" },
-        expires: Date.now() + 60_000, // 1 minute TTL
-      });
-      return res.redirect(`${TAILSCALE_URL}/auth/handoff?token=${token}`);
-    }
+    // Generate an API token and redirect with it as a query param.
+    // The SPA fallback injects user data into the HTML, bypassing
+    // unreliable cookie delivery across the cross-site OAuth redirect.
+    const authToken = crypto.randomBytes(32).toString("hex");
+    apiTokens.set(authToken, {
+      user: { id: user.id, username: user.username, avatar: user.avatar ?? "" },
+      expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days (used as Bearer token by frontend)
+    });
 
-    // Normal flow — set session on current domain
+    // Also set session cookie (belt and suspenders)
     req.session.user = {
       id: user.id,
       username: user.username,
       avatar: user.avatar ?? "",
     };
-
-    console.log(`[AUTH] User set: ${user.username}, saving session...`);
-    req.session.save((err) => {
-      console.log(`[AUTH] Save done — err: ${err ? err.message : "none"}, hasUser: ${!!req.session.user}`);
-      res.redirect("/");
+    req.session.save(() => {
+      const target = fromPWA && TAILSCALE_URL
+        ? `${TAILSCALE_URL}/?auth=${authToken}`
+        : `/?auth=${authToken}`;
+      console.log(`[AUTH] User: ${user.username}, redirecting with auth token`);
+      res.redirect(target);
     });
   } catch (err) {
     console.error(`[AUTH] Callback error:`, err);
@@ -194,11 +194,22 @@ router.get("/logout", (req, res) => {
 
 // --- GET /api/auth/me ---
 router.get("/me", (req, res) => {
-  console.log(`[AUTH] /me called — hasSession: ${!!req.session}, hasUser: ${!!req.session.user}`);
-  if (!req.session.user) {
-    return res.status(401).json({ error: "Not logged in." });
+  // 1. Session cookie
+  if (req.session.user) {
+    console.log(`[AUTH] /me OK — cookie (${req.session.user.username})`);
+    return res.json(req.session.user);
   }
-  res.json(req.session.user);
+  // 2. Bearer token (from localStorage, set by OAuth flow)
+  const authHeader = req.headers.authorization;
+  if (authHeader?.startsWith("Bearer ")) {
+    const user = verifyApiToken(authHeader.slice(7));
+    if (user) {
+      console.log(`[AUTH] /me OK — bearer (${user.username})`);
+      return res.json(user);
+    }
+  }
+  console.log(`[AUTH] /me FAIL — no valid auth`);
+  res.status(401).json({ error: "Not logged in." });
 });
 
 export { router as authRouter };

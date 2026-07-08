@@ -75,7 +75,7 @@ describe("greeting API contract", () => {
       "utf8",
     );
     expect(routeSrc).toContain("greetingCache.get(persona)");
-    expect(routeSrc).toContain("greetingCache.set(persona, greeting)");
+    expect(routeSrc).toContain("greetingCache.set(persona, { greeting");
   });
 
   it("accepts persona query parameter", () => {
