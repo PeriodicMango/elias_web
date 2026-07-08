@@ -83,9 +83,14 @@ app.use("/api", (_req, res, next) => {
 });
 
 // Session — SQLite-backed (survives restarts, no external DB needed)
+const SQLiteStore = createSqliteStore(session);
+// Use absolute cwd-based path — tsx compiles to a cache dir so __dirname is unreliable.
+// process.cwd() is always platforms/web/ because we cd before starting.
+const sessionDir = process.cwd();
+
 app.use(
   session({
-    // TEMPORARY: use MemoryStore to test if SQLite is the culprit
+    store: new SQLiteStore({ db: "sessions.db", dir: sessionDir }),
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
