@@ -81,6 +81,7 @@ router.get("/handoff", (req, res) => {
 
 // --- GET /auth/login --- redirect to Discord OAuth ---
 router.get("/login", (req, res) => {
+  console.log("[AUTH] /login — CLIENT_ID:", CLIENT_ID ? `SET (len=${CLIENT_ID.length})` : "NOT SET");
   if (!CLIENT_ID) {
     return res.status(500).send("DISCORD_CLIENT_ID not configured.");
   }
