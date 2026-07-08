@@ -86,16 +86,21 @@ app.use("/api", (_req, res, next) => {
 
 // Session — SQLite-backed (survives restarts, no external DB needed)
 const SQLiteStore = createSqliteStore(session);
-const sessionDbPath = path.resolve(__dirname, "..", "sessions.db");
+// Use cwd-based path for tsx compatibility (same reasoning as dotenv fix)
+const sessionDir = fs.existsSync(path.resolve(__dirname, ".."))
+  ? path.resolve(__dirname, "..")
+  : process.cwd();
 
 app.use(
   session({
-    store: new SQLiteStore({ db: "sessions.db", dir: path.resolve(__dirname, "..") }),
+    store: new SQLiteStore({ db: "sessions.db", dir: sessionDir }),
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
       secure: false,
+      httpOnly: true,
+      sameSite: "lax",
       maxAge: 30 * 24 * 60 * 60 * 1000,
     },
   }),
