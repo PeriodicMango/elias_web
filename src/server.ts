@@ -29,6 +29,7 @@ import { goalsRouter } from "./routes/goals.js";
 import { activityRouter } from "./routes/activity.js";
 import { homeRouter } from "./routes/home.js";
 import { notificationsRouter } from "./routes/notifications.js";
+import { modelsRouter } from "./routes/models.js";
 import { requireSession } from "./middleware/auth.js";
 
 const PORT = Number(process.env.WEB_PORT) || 3457;
@@ -116,6 +117,7 @@ app.use("/api/goals", requireSession, goalsRouter);
 app.use("/api/activity", requireSession, activityRouter);
 app.use("/api/home", requireSession, homeRouter);
 app.use("/api/notifications", notificationsRouter);
+app.use("/api/models", requireSession, modelsRouter);
 
 // --- Static frontend ---
 // Try Capacitor app frontend first (local dev), fall back to local public/ (cloud)
