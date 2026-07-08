@@ -5,18 +5,16 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Resolve .env path — tsx may compile to a cache dir, so fall back to cwd
-function resolveEnv(relativeFromHere: string, relativeFromCwd: string): string {
-  const primary = path.resolve(__dirname, relativeFromHere);
-  if (fs.existsSync(primary)) return primary;
-  return path.resolve(process.cwd(), relativeFromCwd);
+// Load .env files — use cwd-based paths because tsx may compile to a cache dir
+// where __dirname points to a temp location rather than the source tree.
+const ROOT = path.resolve(process.cwd(), "..", ".."); // platforms/web → elias root
+dotenv.config({ path: path.join(ROOT, "eliasCore", ".env"), override: false });
+dotenv.config({ path: path.join(process.cwd(), ".env") });
+// Fallback: try __dirname-relative paths for direct node (non-tsx) execution
+if (!process.env.DISCORD_CLIENT_ID) {
+  dotenv.config({ path: path.resolve(__dirname, "..", "..", "..", "eliasCore", ".env"), override: false });
+  dotenv.config({ path: path.resolve(__dirname, "..", ".env") });
 }
-
-// Load eliasCore .env FIRST so its config.ts finds API keys
-dotenv.config({ path: resolveEnv("../../../eliasCore/.env", "../../eliasCore/.env"), override: false });
-// Then load web-specific .env
-const webEnv = dotenv.config({ path: resolveEnv("../.env", ".env") });
-if (webEnv.error) console.error("[ELIAS-WEB] Failed to load .env:", webEnv.error.message);
 
 import express from "express";
 import session from "express-session";
